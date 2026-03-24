@@ -3,7 +3,7 @@
 import { useTripStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, MotionButton } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, ChevronLeft, MapPin, CalendarDays, Receipt, Car, Map as MapIcon, ClipboardList, FileText, Trash2, Edit, Clock, Coins } from 'lucide-react';
@@ -166,18 +166,25 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
                         {!readonly && (
                             <>
                                 <Link href={`/trips/${trip.id}/edit`} className="flex-1 md:flex-none">
-                                    <Button variant="outline" className="w-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 backdrop-blur-md rounded-full px-6 transition-all group/btn">
+                                    <MotionButton 
+                                        variant="outline" 
+                                        className="w-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 backdrop-blur-md rounded-full px-6 transition-all group/btn"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
                                         <Edit className="w-4 h-4 mr-2 group-hover/btn:text-sky-400 transition-colors" />
                                         Editar
-                                    </Button>
+                                    </MotionButton>
                                 </Link>
-                                <Button
+                                <MotionButton
                                     variant="ghost"
                                     onClick={handleDelete}
                                     className="px-4 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                                    whileHover={{ scale: 1.1, rotate: 5 }}
+                                    whileTap={{ scale: 0.9 }}
                                 >
                                     <Trash2 className="w-5 h-5" />
-                                </Button>
+                                </MotionButton>
                             </>
                         )}
                         <Link href={readonly ? "/manager/tracking" : "/dashboard"}>

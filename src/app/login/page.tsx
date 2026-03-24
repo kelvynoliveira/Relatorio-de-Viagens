@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, MotionButton } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -110,7 +110,13 @@ export default function LoginPage() {
                                 </div>
                             </div>
     
-                            <Button type="submit" className="w-full h-14 text-lg font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all bg-primary hover:bg-primary/90 mt-4" disabled={isLoading}>
+                            <MotionButton 
+                                type="submit" 
+                                className="w-full h-14 text-lg font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all bg-primary hover:bg-primary/90 mt-4" 
+                                disabled={isLoading}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 mr-3 animate-spin" />
@@ -119,7 +125,7 @@ export default function LoginPage() {
                                 ) : (
                                     'Acessar Dashboard'
                                 )}
-                            </Button>
+                            </MotionButton>
                         </form>
                     </CardContent>
                 </Card>

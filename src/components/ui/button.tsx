@@ -42,7 +42,7 @@ import { motion, HTMLMotionProps } from "framer-motion"
 
 // ... (existing buttonVariants remains the same)
 
-const ButtonBase = React.forwardRef<
+const Button = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants> & { asChild?: boolean }
 >(({ className, variant, size, asChild = false, ...props }, ref) => {
@@ -55,22 +55,8 @@ const ButtonBase = React.forwardRef<
     />
   )
 })
-ButtonBase.displayName = "ButtonBase"
-
-const MotionButton = motion(ButtonBase)
-
-const Button = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<typeof MotionButton>
->((props, ref) => (
-  <MotionButton
-    ref={ref}
-    whileHover={{ scale: 1.015 }}
-    whileTap={{ scale: 0.985 }}
-    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-    {...props}
-  />
-))
 Button.displayName = "Button"
 
-export { Button, buttonVariants }
+const MotionButton = motion(Button)
+
+export { Button, MotionButton, buttonVariants }

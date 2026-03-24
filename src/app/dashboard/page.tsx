@@ -4,7 +4,7 @@ import { useTripStore } from '@/lib/store';
 import DashboardStats from '@/components/dashboard/dashboard-stats';
 import DashboardEmptyState from '@/components/dashboard/dashboard-empty-state';
 import TripCard from '@/components/trip/trip-card';
-import { Button } from '@/components/ui/button';
+import { Button, MotionButton } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
@@ -90,11 +90,13 @@ export default function DashboardPage() {
                             </p>
                         </div>
                         <Link href="/trips/new">
-                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                <Button className="h-16 px-10 text-xl font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all bg-primary hover:bg-primary/90">
-                                    <Plus className="mr-3 h-6 w-6 stroke-[3]" /> Nova Viagem
-                                </Button>
-                            </motion.div>
+                            <MotionButton 
+                                className="h-16 px-10 text-xl font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all bg-primary hover:bg-primary/90"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <Plus className="mr-3 h-6 w-6 stroke-[3]" /> Nova Viagem
+                            </MotionButton>
                         </Link>
                     </motion.header>
 
