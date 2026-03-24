@@ -188,36 +188,38 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
                     </div>
                 </div>
             </div>
-
-            {/* Header Stats */}
+            {/* Header Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: 'Horas Técnicas', value: formatDuration(stats.totalHoursMin), icon: Clock, color: 'text-zinc-200', bg: 'bg-zinc-500/10', glow: 'group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]' },
-                    { label: 'Total Gastos', value: formatCurrency(stats.totalExpenses), icon: Coins, color: 'text-emerald-400', bg: 'bg-emerald-500/10', glow: 'group-hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]' },
-                    { label: 'Total Percorrido', value: formatDistance(stats.totalKm), icon: MapIcon, color: 'text-blue-400', bg: 'bg-blue-500/10', glow: 'group-hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]' },
-                    { label: 'Pedágios', value: formatCurrency(stats.tollStats.cost), icon: Car, color: 'text-amber-400', bg: 'bg-amber-500/10', glow: 'group-hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]' }
+                    { label: 'Horas Técnicas', value: formatDuration(stats.totalHoursMin), icon: Clock, color: 'text-zinc-200', bg: 'bg-zinc-500/10', glow: 'hover:shadow-white/5' },
+                    { label: 'Total Gastos', value: formatCurrency(stats.totalExpenses), icon: Coins, color: 'text-emerald-400', bg: 'bg-emerald-500/10', glow: 'hover:shadow-emerald-500/10' },
+                    { label: 'Total Percorrido', value: formatDistance(stats.totalKm), icon: MapIcon, color: 'text-blue-400', bg: 'bg-blue-500/10', glow: 'hover:shadow-blue-500/10' },
+                    { label: 'Pedágios', value: formatCurrency(stats.tollStats.cost), icon: Car, color: 'text-amber-400', bg: 'bg-amber-500/10', glow: 'hover:shadow-amber-500/10' }
                 ].map((stat, idx) => (
                     <motion.div
                         key={idx}
-                        whileHover={{ y: -4 }}
-                        className="group relative"
+                        whileHover={{ y: -8, scale: 1.02 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        className="group"
                     >
                         <Card className={cn(
-                            "border-0 bg-black/20 backdrop-blur-xl overflow-hidden ring-1 ring-white/5 transition-all duration-500",
+                            "glass-card border-white/5 overflow-hidden transition-all duration-500 h-full",
                             stat.glow
                         )}>
-                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <stat.icon className="w-16 h-16 rotate-12" />
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <stat.icon className="w-20 h-20 rotate-12" />
                             </div>
-                            <CardContent className="p-5 flex flex-col justify-between h-full relative z-10">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className={cn("p-2 rounded-lg ring-1 ring-inset ring-white/10", stat.bg)}>
-                                        <stat.icon className={cn("w-4 h-4", stat.color)} />
+                            <CardContent className="p-6 flex flex-col justify-between h-full relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className={cn("p-2.5 rounded-xl ring-1 ring-inset ring-white/10", stat.bg)}>
+                                        <stat.icon className={cn("w-5 h-5", stat.color)} />
                                     </div>
-                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</span>
                                 </div>
-                                <div className={cn("text-2xl md:text-3xl font-bold tracking-tight drop-shadow-sm", stat.color)}>
-                                    {stat.value}
+                                <div className="space-y-1">
+                                    <div className={cn("text-2xl md:text-3xl font-black tracking-tighter drop-shadow-sm", stat.color)}>
+                                        {stat.value}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

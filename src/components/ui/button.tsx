@@ -38,27 +38,39 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot.Root : "button"
+import { motion, HTMLMotionProps } from "framer-motion"
 
+// ... (existing buttonVariants remains the same)
+
+const ButtonBase = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants> & { asChild?: boolean }
+>(({ className, variant, size, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot.Root : "button"
   return (
     <Comp
-      data-slot="button"
-      data-variant={variant}
-      data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      ref={ref}
       {...props}
     />
   )
-}
+})
+ButtonBase.displayName = "ButtonBase"
+
+const MotionButton = motion(ButtonBase)
+
+const Button = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof MotionButton>
+>((props, ref) => (
+  <MotionButton
+    ref={ref}
+    whileHover={{ scale: 1.015 }}
+    whileTap={{ scale: 0.985 }}
+    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+    {...props}
+  />
+))
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

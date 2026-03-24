@@ -127,7 +127,7 @@ export default function DashboardStats({ trips }: { trips: Trip[] }) {
             </div>
 
             {/* Animated Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {[
                     {
                         label: 'Horas Técnicas',
@@ -140,7 +140,7 @@ export default function DashboardStats({ trips }: { trips: Trip[] }) {
                     {
                         label: 'Deslocamento',
                         value: formatDistance(stats.totalKm),
-                        sub: 'Distância total percorrida',
+                        sub: 'Distância percorrida',
                         icon: MapPin,
                         color: 'text-blue-500',
                         bg: 'bg-blue-500/10 border-blue-500/20'
@@ -148,10 +148,10 @@ export default function DashboardStats({ trips }: { trips: Trip[] }) {
                     {
                         label: 'Combustível',
                         value: formatCurrency(stats.totalFuel),
-                        sub: `${stats.fuelCount} abast. • ${stats.totalFuelLiters.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} L`,
+                        sub: `${stats.fuelCount} abastecimentos`,
                         icon: Fuel,
-                        color: 'text-orange-500',
-                        bg: 'bg-orange-500/10 border-orange-500/20'
+                        color: 'text-emerald-500',
+                        bg: 'bg-emerald-500/10 border-emerald-500/20'
                     },
                     {
                         label: 'Pedágios',
@@ -164,25 +164,29 @@ export default function DashboardStats({ trips }: { trips: Trip[] }) {
                 ].map((stat, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1, duration: 0.4 }}
+                        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ 
+                            delay: i * 0.1, 
+                            duration: 0.6,
+                            ease: [0.22, 1, 0.36, 1]
+                        }}
                     >
-                        <Card className="overflow-hidden border-border/50 hover:border-primary/20 transition-all hover:shadow-lg group">
-                            <CardContent className="p-5">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={cn("p-2 rounded-lg transition-transform group-hover:scale-110 duration-300", stat.bg)}>
-                                        <stat.icon className={cn("w-5 h-5", stat.color)} />
+                        <Card className="overflow-hidden glass-card border-white/5 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 group">
+                            <CardContent className="p-6">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110 group-hover:rotate-3 duration-500", stat.bg)}>
+                                        <stat.icon className={cn("w-6 h-6", stat.color)} />
                                     </div>
-                                    <div className="flex items-center text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
-                                        <TrendingUp className="w-3 h-3 mr-1 text-green-500" />
-                                        <span>+0%</span>
+                                    <div className="flex items-center text-[10px] font-bold text-muted-foreground bg-muted/30 px-2.5 py-1 rounded-full uppercase tracking-widest">
+                                        <TrendingUp className="w-3 h-3 mr-1 text-emerald-500" />
+                                        <span>Status</span>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="text-2xl font-bold tracking-tight">{stat.value}</h3>
-                                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                                    <p className="text-xs text-muted-foreground/60">{stat.sub}</p>
+                                    <h3 className="text-2xl font-black tracking-tighter text-gradient">{stat.value}</h3>
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                                    <p className="text-[10px] text-muted-foreground/60 font-medium">{stat.sub}</p>
                                 </div>
                             </CardContent>
                         </Card>

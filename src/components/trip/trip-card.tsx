@@ -56,14 +56,13 @@ export default function TripCard({ trip, readonly = false }: TripCardProps) {
 
     const cardContent = (
         <motion.div
-            whileHover={readonly ? {} : { y: -4, scale: 1.01 }}
-            whileTap={readonly ? {} : { scale: 0.99 }}
+            whileHover={readonly ? {} : { y: -8, scale: 1.02 }}
+            whileTap={readonly ? {} : { scale: 0.98 }}
             className={cn(
-                "group relative overflow-hidden rounded-3xl border border-white/5 transition-all duration-500 h-full flex flex-col",
-                "bg-black/20 backdrop-blur-xl shadow-2xl",
-                "hover:shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-primary/30",
-                "before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
-                isFinished && "opacity-70 grayscale-[0.5] hover:opacity-100 hover:grayscale-0"
+                "group relative overflow-hidden rounded-3xl transition-all duration-500 h-full flex flex-col",
+                "glass-card border border-white/5 shadow-2xl hover:shadow-primary/10",
+                "after:absolute after:inset-0 after:bg-gradient-to-br after:from-primary/10 after:to-transparent after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-700",
+                isFinished && "opacity-60 grayscale-[0.8] hover:opacity-100 hover:grayscale-0"
             )}
         >
             {/* Status Indicator Stripe */}
