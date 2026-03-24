@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, MotionButton } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Loader2, Camera, Upload } from 'lucide-react';
 import { formatUserName } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 interface ProfileSettingsDialogProps {
     children: React.ReactNode;
@@ -88,24 +89,34 @@ export function ProfileSettingsDialog({ children }: ProfileSettingsDialogProps) 
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-zinc-950/90 border-zinc-800 backdrop-blur-xl">
+            <DialogContent className="sm:max-w-md border-white/5">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-semibold">Editar Perfil</DialogTitle>
+                    <DialogTitle className="text-2xl font-black tracking-tighter text-white">Editar <span className="text-gradient">Perfil</span></DialogTitle>
                 </DialogHeader>
 
-                <div className="flex flex-col items-center gap-6 py-6">
+                <div className="flex flex-col items-center gap-6 py-8">
                     <div className="relative group">
-                        <Avatar className="w-32 h-32 border-4 border-zinc-900 shadow-xl">
-                            <AvatarImage src={previewUrl || user?.avatar_url} className="object-cover" />
-                            <AvatarFallback className="text-4xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                                {formatUserName(user?.name).substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Avatar className="w-40 h-40 border-8 border-white/5 shadow-2xl relative overflow-hidden">
+                                <AvatarImage src={previewUrl || user?.avatar_url} className="object-cover" />
+                                <AvatarFallback className="text-5xl font-black bg-gradient-to-br from-primary to-purple-600 text-white">
+                                    {formatUserName(user?.name).substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                                {uploading && (
+                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                                        <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                    </div>
+                                )}
+                            </Avatar>
+                        </motion.div>
                         <Label
                             htmlFor="avatar-upload"
-                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-colors shadow-lg"
+                            className="absolute bottom-2 right-2 p-3 bg-primary text-primary-foreground rounded-2xl cursor-pointer hover:bg-primary/90 transition-all shadow-2xl shadow-primary/40 group-hover:scale-110 active:scale-95"
                         >
-                            <Camera className="w-5 h-5" />
+                            <Camera className="w-6 h-6 stroke-[2.5]" />
                             <Input
                                 id="avatar-upload"
                                 type="file"
@@ -117,24 +128,27 @@ export function ProfileSettingsDialog({ children }: ProfileSettingsDialogProps) 
                         </Label>
                     </div>
 
-                    <div className="text-center space-y-1">
-                        <h3 className="font-medium text-lg">{formatUserName(user?.name)}</h3>
-                        <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    <div className="text-center space-y-2">
+                        <h3 className="font-black text-2xl tracking-tight text-white">{formatUserName(user?.name)}</h3>
+                        <p className="text-sm font-medium text-muted-foreground/60 uppercase tracking-widest">{user?.email}</p>
                     </div>
                 </div>
 
-                <DialogFooter className="sm:justify-between gap-2 border-t border-white/5 pt-4 mt-2">
+                <DialogFooter className="sm:justify-between gap-4 border-t border-white/5 pt-6 mt-4">
                     <Button
                         variant="ghost"
                         onClick={() => setIsOpen(false)}
                         disabled={uploading}
+                        className="rounded-xl font-bold"
                     >
                         Cancelar
                     </Button>
-                    <Button
+                    <MotionButton
                         onClick={handleUpload}
                         disabled={!file || uploading}
-                        className="shadow-lg shadow-primary/20"
+                        className="rounded-xl px-8 font-black shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                     >
                         {uploading ? (
                             <>
@@ -143,11 +157,11 @@ export function ProfileSettingsDialog({ children }: ProfileSettingsDialogProps) 
                             </>
                         ) : (
                             <>
-                                <Upload className="w-4 h-4 mr-2" />
+                                <Upload className="w-4 h-4 mr-2 stroke-[3]" />
                                 Salvar Foto
                             </>
                         )}
-                    </Button>
+                    </MotionButton>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
