@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -63,6 +64,11 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-premium-gradient p-4 antialiased overflow-hidden relative">
+            {/* Theme Toggle (Guest) */}
+            <div className="absolute top-6 right-6 z-50">
+                <ThemeToggle />
+            </div>
+
             {/* Animated Background Orbs */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 blur-[120px] rounded-full animate-pulse delay-700" />
@@ -139,8 +145,10 @@ export default function ForgotPasswordPage() {
                                     </motion.div>
 
                                     <motion.div variants={itemVariants} className="text-center">
-                                        <Link href="/login" className="inline-flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-all group">
-                                            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> Voltar para o Login
+                                        <Link href="/login" className="inline-flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-all group" legacyBehavior>
+                                            <a className="flex items-center gap-2">
+                                                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> Voltar para o Login
+                                            </a>
                                         </Link>
                                     </motion.div>
                                 </motion.form>
@@ -160,7 +168,7 @@ export default function ForgotPasswordPage() {
                                     <Link href="/login" className="block">
                                         <MotionButton 
                                             variant="outline" 
-                                            className="w-full h-14 text-lg font-black rounded-2xl border-white/10 hover:bg-white/5 transition-all"
+                                            className="w-full h-14 text-lg font-black rounded-2xl border-white/10 hover:bg-white/5 transition-all text-white"
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                         >

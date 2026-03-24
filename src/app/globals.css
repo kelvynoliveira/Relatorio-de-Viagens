@@ -167,8 +167,11 @@
 }
 
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 
-  /* Hide all non-printable elements by default */
   aside,
   header,
   nav,
@@ -177,21 +180,15 @@
     display: none !important;
   }
 
-  /* Reset background and text colors for print */
   body {
-    background: white;
-    color: black;
+    background: var(--background) !important;
+    color: var(--foreground) !important;
+    -webkit-print-color-adjust: exact;
   }
 
-  /* Allow printing to span multiple pages */
-  .break-after-page {
-    break-after: page;
-  }
-
-  /* Ensure main content is visible */
   main {
-    margin: 0;
-    padding: 0;
-    overflow: visible;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
 }

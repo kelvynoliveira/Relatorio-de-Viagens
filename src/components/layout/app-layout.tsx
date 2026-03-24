@@ -173,12 +173,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         </Sheet>
                         <span className="font-black text-xl tracking-tighter text-gradient uppercase">Viagens</span>
                     </div>
-                    <ProfileSettingsDialog>
-                        <Avatar className="w-10 h-10 border-2 border-primary/20">
-                            <AvatarImage src={user?.avatar_url} className="object-cover" />
-                            <AvatarFallback className="bg-primary/10 text-primary font-bold">{user?.name?.substring(0, 2).toUpperCase() || 'US'}</AvatarFallback>
-                        </Avatar>
-                    </ProfileSettingsDialog>
+                    <div className="flex items-center gap-2">
+                        <ThemeToggle className="w-10 h-10 rounded-xl" />
+                        <ProfileSettingsDialog>
+                            <Avatar className="w-10 h-10 border-2 border-primary/20">
+                                <AvatarImage src={user?.avatar_url} className="object-cover" />
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold">{user?.name?.substring(0, 2).toUpperCase() || 'US'}</AvatarFallback>
+                            </Avatar>
+                        </ProfileSettingsDialog>
+                    </div>
                 </header>
 
                 {/* Page Content */}
