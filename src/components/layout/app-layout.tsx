@@ -32,7 +32,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
-    const { user, trips } = useTripStore();
+    const { user, trips, isLoading } = useTripStore();
+
+    useEffect(() => {
+        if (!isLoading && !user && pathname !== '/login' && pathname !== '/forgot-password' && pathname !== '/reset-password') {
+            router.push('/login');
+        }
+    }, [isLoading, user, pathname, router]);
 
     const handleLogout = async () => {
         await logout();

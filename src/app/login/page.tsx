@@ -9,6 +9,7 @@ import { Car, Lock, Loader2 } from 'lucide-react';
 import { login } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -67,7 +68,15 @@ export default function LoginPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Senha</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="password">Senha</Label>
+                                <Link 
+                                    href="/forgot-password" 
+                                    className="text-xs text-primary hover:underline font-medium"
+                                >
+                                    Esqueceu a senha?
+                                </Link>
+                            </div>
                             <div className="relative">
                                 <Input
                                     id="password"
