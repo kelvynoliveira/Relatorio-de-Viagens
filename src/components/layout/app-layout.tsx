@@ -88,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <motion.aside 
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                className="hidden md:flex w-[280px] flex-col glass-card fixed top-4 left-4 h-[calc(100vh-2rem)] z-30 rounded-3xl shadow-2xl overflow-hidden border-0"
+                className="hidden md:flex w-[280px] flex-col glass-card fixed top-4 left-4 h-[calc(100vh-2rem)] z-30 rounded-3xl shadow-2xl overflow-hidden border border-primary/10 dark:border-white/5 shadow-primary/5 dark:shadow-black/50"
             >
                 <div className="p-8 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold shadow-lg shadow-primary/20">

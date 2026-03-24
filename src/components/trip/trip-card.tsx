@@ -60,7 +60,7 @@ export default function TripCard({ trip, readonly = false }: TripCardProps) {
             whileTap={readonly ? {} : { scale: 0.98 }}
             className={cn(
                 "group relative overflow-hidden rounded-3xl transition-all duration-500 h-full flex flex-col",
-                "glass-card border border-white/5 shadow-2xl hover:shadow-primary/10",
+                "glass-card border border-primary/10 shadow-2xl hover:shadow-primary/15 hover:border-primary/20",
                 "after:absolute after:inset-0 after:bg-gradient-to-br after:from-primary/10 after:to-transparent after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-700",
                 isFinished && "opacity-60 grayscale-[0.8] hover:opacity-100 hover:grayscale-0"
             )}
@@ -99,7 +99,7 @@ export default function TripCard({ trip, readonly = false }: TripCardProps) {
 
             <CardContent className="pb-4 pl-8 pr-6 flex-grow z-10 relative">
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground/80">
-                    <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/5 shadow-inner">
+                    <div className="flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/5 shadow-inner">
                         <Calendar className="w-3.5 h-3.5 text-primary/60" />
                         <span className="font-medium">
                             {trip.startDate ? format(new Date(trip.startDate), 'dd MMM') : '--'}
@@ -107,15 +107,15 @@ export default function TripCard({ trip, readonly = false }: TripCardProps) {
                             {trip.endDate ? format(new Date(trip.endDate), 'dd MMM') : '--'}
                         </span>
                     </div>
-                    <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/5 shadow-inner">
+                    <div className="flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/5 shadow-inner">
                         <Clock className="w-3.5 h-3.5 text-primary/60" />
                         <span className="font-medium">{duration} dias</span>
                     </div>
                 </div>
             </CardContent>
 
-            <CardFooter className="pt-5 pb-5 pl-8 pr-6 border-t border-white/5 bg-black/20 flex justify-between items-center group-hover:bg-white/5 transition-colors z-10 relative">
-                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-400">
+            <CardFooter className="pt-5 pb-5 pl-8 pr-6 border-t border-primary/10 bg-primary/5 flex justify-between items-center group-hover:bg-primary/10 transition-colors z-10 relative">
+                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                     <div className="p-1.5 rounded-full bg-emerald-500/10">
                         <Wallet className="w-4 h-4" />
                     </div>
