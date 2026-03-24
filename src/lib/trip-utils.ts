@@ -28,7 +28,7 @@ export function calculateTripStats(trip: Trip): TripStats {
     // Calculate hours from visits
     trip.visits?.forEach((visit) => {
         visit.sessions?.forEach((session) => {
-            if (session.endAt) {
+            if (session.startAt && session.endAt) {
                 const start = new Date(session.startAt).getTime();
                 const end = new Date(session.endAt).getTime();
                 totalHoursMin += (end - start) / 1000 / 60;
