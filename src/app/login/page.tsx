@@ -90,7 +90,7 @@ export default function LoginPage() {
                         <Car className="w-10 h-10 text-primary-foreground stroke-[2.5]" />
                     </motion.div>
                     <motion.div variants={itemVariants} className="space-y-1">
-                        <h1 className="text-5xl font-black tracking-tighter text-white">
+                        <h1 className="text-5xl font-black tracking-tighter text-foreground">
                             Viagens <span className="text-gradient">Técnicas</span>
                         </h1>
                         <p className="text-sm font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">Ânima Educação</p>
@@ -99,7 +99,7 @@ export default function LoginPage() {
 
                 <Card className="border-0 shadow-2xl glass-card rounded-[2.5rem] overflow-hidden">
                     <CardHeader className="space-y-1 pb-8 pt-10 px-8">
-                        <CardTitle className="text-3xl font-black tracking-tight text-white">Login</CardTitle>
+                        <CardTitle className="text-3xl font-black tracking-tight text-foreground">Login</CardTitle>
                         <CardDescription className="text-base font-medium text-muted-foreground/60">
                             Acesse sua conta para gerenciar deslocamentos.
                         </CardDescription>

@@ -81,11 +81,11 @@ export default function DashboardPage() {
                         className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 glass-card p-10 rounded-[3rem] border-white/5"
                     >
                         <div>
-                            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white mb-3">
+                            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-foreground mb-3">
                                 <span className="text-gradient">Painel</span> Geral
                             </h1>
                             <p className="text-muted-foreground text-xl font-medium">
-                                Bem-vindo, <span className="text-white font-black">{formatUserName(user?.name)}</span>. 
+                                Bem-vindo, <span className="text-foreground font-black">{formatUserName(user?.name)}</span>. 
                                 Aqui está o seu relatório estratégico.
                             </p>
                         </div>

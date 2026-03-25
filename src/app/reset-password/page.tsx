@@ -118,7 +118,7 @@ export default function ResetPasswordPage() {
                             <Lock className="w-10 h-10 text-primary-foreground stroke-[2.5]" />
                         </motion.div>
                         <motion.div variants={itemVariants} className="space-y-2">
-                            <CardTitle className="text-4xl font-black tracking-tighter text-white">
+                            <CardTitle className="text-4xl font-black tracking-tighter text-foreground">
                                 {isSuccess ? 'Senha' : 'Nova'} <span className="text-gradient">Senha</span>
                             </CardTitle>
                             <CardDescription className="text-lg font-medium text-muted-foreground/80 px-4">

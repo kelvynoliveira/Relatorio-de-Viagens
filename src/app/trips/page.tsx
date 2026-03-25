@@ -27,7 +27,7 @@ export default function TripsPage() {
         <div className="container max-w-6xl mx-auto py-12 px-4 space-y-12">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 border-b border-white/10 pb-8">
                 <div className="space-y-2">
-                    <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                    <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
                         Minhas Viagens
                     </h1>
                     <p className="text-muted-foreground text-lg font-light max-w-2xl">

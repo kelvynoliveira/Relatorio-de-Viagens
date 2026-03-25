@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
                             <Car className="w-10 h-10 text-primary-foreground stroke-[2.5]" />
                         </motion.div>
                         <motion.div variants={itemVariants} className="space-y-2">
-                            <CardTitle className="text-4xl font-black tracking-tighter text-white">
+                            <CardTitle className="text-4xl font-black tracking-tighter text-foreground">
                                 {isSent ? 'Sucesso!' : 'Recuperar'} <span className="text-gradient">Senha</span>
                             </CardTitle>
                             <CardDescription className="text-lg font-medium text-muted-foreground/80 px-4">
@@ -168,7 +168,7 @@ export default function ForgotPasswordPage() {
                                     <Link href="/login" className="block">
                                         <MotionButton 
                                             variant="outline" 
-                                            className="w-full h-14 text-lg font-black rounded-2xl border-white/10 hover:bg-white/5 transition-all text-white"
+                                            className="w-full h-14 text-lg font-black rounded-2xl border-primary/10 hover:bg-primary/5 transition-all text-foreground"
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                         >
