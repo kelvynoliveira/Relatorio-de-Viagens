@@ -129,7 +129,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                 <p className="text-muted-foreground truncate max-w-[120px] text-[10px] uppercase tracking-tighter">{user?.role || 'Viajante'}</p>
                             </div>
                         </div>
-                        <ThemeToggle />
                     </div>
                     <Button 
                         variant="ghost" 
@@ -174,7 +173,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         <span className="font-black text-xl tracking-tighter text-gradient uppercase">Viagens</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <ThemeToggle className="w-10 h-10 rounded-xl" />
                         <ProfileSettingsDialog>
                             <Avatar className="w-10 h-10 border-2 border-primary/20">
                                 <AvatarImage src={user?.avatar_url} className="object-cover" />
