@@ -149,6 +149,20 @@
     backdrop-filter: none !important;
     box-shadow: none !important;
     color: #000000 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 1.5rem !important;
+    display: block !important;
+  }
+
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  h1, h2, h3, h4 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
   }
 
   .text-gradient {
