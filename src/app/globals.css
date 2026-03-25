@@ -119,9 +119,47 @@
 }
 
 @media print {
+  :root {
+    --background: #ffffff !important;
+    --foreground: #000000 !important;
+    --card: #ffffff !important;
+    --card-foreground: #000000 !important;
+    --muted: #f4f4f5 !important;
+    --muted-foreground: #71717a !important;
+    --border: #e4e4e7 !important;
+    --primary: #3b82f6 !important;
+    --primary-foreground: #ffffff !important;
+  }
+
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .glass-card {
+    background: #ffffff !important;
+    border: 1px solid #e4e4e7 !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    color: #000000 !important;
+  }
+
+  .text-gradient {
+    -webkit-text-fill-color: initial !important;
+    background: none !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+  }
+
+  .bg-premium-gradient {
+    background: #ffffff !important;
   }
 
   aside,
@@ -132,15 +170,16 @@
     display: none !important;
   }
 
-  body {
-    background: var(--background) !important;
-    color: var(--foreground) !important;
-    -webkit-print-color-adjust: exact;
-  }
-
   main {
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 20px !important;
+    width: 100% !important;
+    max-width: none !important;
     overflow: visible !important;
+  }
+
+  .container {
+    max-width: none !important;
+    padding: 0 !important;
   }
 }
