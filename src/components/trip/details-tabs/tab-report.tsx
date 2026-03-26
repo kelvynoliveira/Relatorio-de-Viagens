@@ -418,9 +418,14 @@ export default function TabReport({ trip }: { trip: Trip }) {
     // actually, I can just copy the previous implementation for print logic and wrap it in `renderPrintConsolidated` etc.
 
     const renderPrintHeader = () => (
-        <div className="flex items-center justify-between border-b-2 border-gray-100 pb-4 mb-4">
+        <div className="flex items-center justify-between border-b-2 border-gray-100 pb-4 mb-6">
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white font-bold">V</div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src="https://tfzlgednlkvmcrxlztkj.supabase.co/storage/v1/object/public/branding/logo.png"
+                    alt="Logo"
+                    className="h-10 w-auto object-contain"
+                />
                 <div>
                     <h1 className="text-sm font-bold uppercase tracking-wide text-primary">Viagens Técnicas</h1>
                     <p className="text-[10px] text-gray-500">Ânima Educação - Infraestrutura de TI</p>
@@ -1036,6 +1041,8 @@ export default function TabReport({ trip }: { trip: Trip }) {
                         left: 0;
                         top: 0;
                         width: 100%;
+                        padding: 1.5cm; /* Larger margins for elite look */
+                        box-sizing: border-box;
                         display: block !important;
                     }
                     /* Ensure children are visible */
