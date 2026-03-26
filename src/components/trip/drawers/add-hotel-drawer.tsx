@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { PhotoUploader } from '@/components/ui/photo-uploader';
 import { Loader2 } from 'lucide-react';
+import { ReceiptScanner } from '@/components/trip/receipt-scanner';
 
 interface AddHotelDrawerProps {
     open: boolean;
@@ -110,6 +111,32 @@ export default function AddHotelDrawer({ open, onOpenChange, tripId, initialData
                     <div className="p-4 px-6 pb-0 flex-1 overflow-auto scrollbar-hide">
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                                <div className="space-y-4">
+                                    <ReceiptScanner
+                                        onScanComplete={(data, photo) => {
+                                            if (data.totalAmount) {
+                                                form.setValue('amount', data.totalAmount);
+                                            }
+                                            if (data.date) {
+                                                form.setValue('date', data.date);
+                                            }
+                                            if (data.location) {
+                                                form.setValue('location', data.location);
+                                                if (!form.getValues('hotelName')) {
+                                                    form.setValue('hotelName', data.location);
+                                                }
+                                            }
+                                            
+                                            // Add photo to list
+                                            const currentPhotos = form.getValues('photos') || [];
+                                            form.setValue('photos', [...currentPhotos, photo]);
+                                            
+                                            toast.info('Dados e comprovante extraídos!');
+                                        }}
+                                    />
+                                    <div className="h-px bg-white/10 w-full" />
+                                </div>
+
                                 <FormField
                                     control={form.control}
                                     name="date"
