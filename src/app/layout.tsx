@@ -4,13 +4,30 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TripStoreProvider } from "@/lib/store";
 import { Toaster } from "@/components/ui/sonner";
+import OfflineIndicator from "@/components/ui/offline-indicator";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Viagens Técnicas - Ânima",
-  description: "Registro de deslocamentos e atendimentos técnicos",
-  manifest: "/manifest.json", // PWA prep
+  title: "Viagens Técnicas Elite",
+  description: "Plataforma Premium para Gestão de Viagens e Relatórios Técnicos",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Viagens Elite",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -32,6 +49,7 @@ export default function RootLayout({
               {children}
             </main>
             <Toaster richColors position="top-center" />
+            <OfflineIndicator />
           </TripStoreProvider>
         </ThemeProvider>
       </body>
