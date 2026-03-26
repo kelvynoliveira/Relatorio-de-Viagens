@@ -438,6 +438,16 @@ export default function TabReport({ trip }: { trip: Trip }) {
         </div>
     );
 
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'completed':
+            case 'done': return 'Concluído';
+            case 'in_progress': return 'Em Andamento';
+            case 'draft': return 'Rascunho';
+            default: return status;
+        }
+    };
+
     const renderPrintConsolidated = () => (
         <div className="bg-white text-black print:w-full print:p-0">
             {renderPrintHeader()}
@@ -465,7 +475,7 @@ export default function TabReport({ trip }: { trip: Trip }) {
                 </div>
                 <div>
                     <span className="block text-xs font-bold uppercase text-gray-500">Status</span>
-                    <span className="text-lg font-medium uppercase">{trip.status}</span>
+                    <span className="text-lg font-medium uppercase">{getStatusLabel(trip.status)}</span>
                 </div>
             </div>
 
