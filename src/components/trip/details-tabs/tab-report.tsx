@@ -417,10 +417,25 @@ export default function TabReport({ trip }: { trip: Trip }) {
     // Keep existing renderConsolidated and renderTechnical for print, renamed slightly to avoid conflict if needed, or just use them inside the print block.
     // actually, I can just copy the previous implementation for print logic and wrap it in `renderPrintConsolidated` etc.
 
+    const renderPrintHeader = () => (
+        <div className="flex items-center justify-between border-b-2 border-gray-100 pb-4 mb-4">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white font-bold">V</div>
+                <div>
+                    <h1 className="text-sm font-bold uppercase tracking-wide text-primary">Viagens Técnicas</h1>
+                    <p className="text-[10px] text-gray-500">Ânima Educação - Infraestrutura de TI</p>
+                </div>
+            </div>
+            <div className="text-right text-[10px] text-gray-400">
+                <p>Relatório Gerado em {new Date().toLocaleDateString()}</p>
+                <p>ID: {trip.id.slice(0, 8)}</p>
+            </div>
+        </div>
+    );
+
     const renderPrintConsolidated = () => (
         <div className="bg-white text-black print:w-full print:p-0">
-            {/* Print Header Spacer */}
-            <div className="h-[15mm] print:block hidden" />
+            {renderPrintHeader()}
 
             {/* Trip Title */}
             <div className="border-b-2 border-primary pb-2 mb-6 mt-4">
@@ -703,7 +718,7 @@ export default function TabReport({ trip }: { trip: Trip }) {
     );
 
     const renderPrintTechnical = () => (
-        <div className="bg-white text-black p-8 shadow-sm border rounded-lg min-h-[29.7cm] print:min-h-0 print:shadow-none print:border-none print:w-full print:p-0">
+        <div className="bg-white text-black print:w-full print:p-0">
             {sortedVisits.map((visit, idx) => {
                 const c = getCampus(visit.campusId);
                 const campusTotalMin = visit.sessions.reduce((acc, s) => {
@@ -714,8 +729,7 @@ export default function TabReport({ trip }: { trip: Trip }) {
 
                 return (
                     <div key={visit.id} className="mb-12 break-inside-avoid print:break-before-page">
-                        {/* Spacer for Fixed Header */}
-                        <div className="h-[25mm] print:block hidden" />
+                        {renderPrintHeader()}
 
                         <div className="border-b-2 border-black pb-2 mb-4 flex justify-between items-end mt-4">
                             <div>
@@ -817,41 +831,6 @@ export default function TabReport({ trip }: { trip: Trip }) {
         <div className="space-y-6">
 
             {/* Print Header (Fixed on every page) */}
-            <div className="hidden print:flex fixed top-0 left-0 right-0 h-[15mm] items-center justify-between border-b border-gray-200 bg-white z-50 print:visible">
-                <div className="flex items-center gap-3">
-                    {/* Company Logo / Brand */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src="https://tfzlgednlkvmcrxlztkj.supabase.co/storage/v1/object/public/branding/logo.png"
-                        alt="Logo"
-                        className="h-8 w-auto object-contain"
-                        onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            // Fallback to V via DOM manipulation since we want to avoid complex state for this simple print fix
-                            if (e.currentTarget.parentElement) {
-                                const fallback = document.createElement('div');
-                                fallback.className = "w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold print:bg-primary print:text-white";
-                                fallback.innerText = "V";
-                                e.currentTarget.parentElement.appendChild(fallback);
-                            }
-                        }}
-                    />
-                    <div>
-                        <h1 className="text-sm font-bold uppercase tracking-wide text-primary">Viagens Técnicas</h1>
-                        <p className="text-[10px] text-gray-500">Ânima Educação - Infraestrutura de TI</p>
-                    </div>
-                </div>
-                <div className="text-right text-[10px] text-gray-400">
-                    <p>Relatório Gerado em {new Date().toLocaleDateString()}</p>
-                    <p>ID: {trip.id.slice(0, 8)}</p>
-                </div>
-            </div>
-
-            {/* Print Footer (Fixed on every page) */}
-            <div className="hidden print:flex fixed bottom-0 left-0 right-0 h-[10mm] items-center justify-between border-t border-gray-200 bg-white z-50 print:visible">
-                <p className="text-[10px] text-gray-400">Plataforma Viagens - Desenvolvido pela Equipe de Infraestrutura</p>
-                <p className="text-[10px] text-gray-400">Página <span className="pageNumber"></span></p>
-            </div>
 
             <div className="flex justify-between items-center print:hidden">
                 <div>
@@ -1042,30 +1021,24 @@ export default function TabReport({ trip }: { trip: Trip }) {
             <style jsx global>{`
                 @media print {
                     @page { 
-                        margin: 1cm; 
+                        margin: 1.5cm; 
                         size: auto; 
                     }
                     body {
-                        visibility: hidden;
                         background: white !important;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
                     }
-                    /* Print Overlay Container */
+                    /* Hide everything except print-container */
+                    body > *:not(#print-container) {
+                        display: none !important;
+                    }
                     #print-container {
-                        visibility: visible;
-                        position: relative;
-                        width: 100%;
-                        margin: 0;
-                        padding: 0 0.5cm; /* Safe side padding */
-                        box-sizing: border-box;
+                        display: block !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                     }
-                    /* Ensure children are visible */
-                    #print-container * {
-                        visibility: visible;
-                    }
-
-                     /* Utilities */
                     .break-before-page {
                         page-break-before: always;
                     }
