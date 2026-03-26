@@ -19,7 +19,7 @@ import { Separator } from '@/components/ui/separator';
 
 export default function TabReport({ trip }: { trip: Trip }) {
     console.log('TabReport Locale Debug:', { ptBR, pt });
-    const { campuses } = useTripStore();
+    const { campuses, user } = useTripStore();
     const [reportOptions, setReportOptions] = useState({
         fuel: false,
         tolls: false,
@@ -711,6 +711,27 @@ export default function TabReport({ trip }: { trip: Trip }) {
                     })}
                 </div>
             </div>
+
+            {/* Signature Section */}
+            {user?.signature_url && (
+                <div className="mt-16 pt-8 border-t border-gray-200 break-inside-avoid">
+                    <div className="flex flex-col items-center justify-center">
+                        <img
+                            src={user.signature_url}
+                            alt="Assinatura"
+                            className="h-20 w-auto object-contain mix-blend-multiply"
+                        />
+                        <div className="mt-2 text-center">
+                            <p className="font-bold text-sm tracking-[0.2em] uppercase">{user.name}</p>
+                            <div className="h-0.5 w-48 bg-gray-200 my-1 mx-auto" />
+                            <p className="text-[10px] text-gray-500 uppercase font-medium">Analista Responsável</p>
+                            <p className="text-[9px] text-gray-400 mt-2 italic font-mono">
+                                Assinado digitalmente • {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -822,6 +843,26 @@ export default function TabReport({ trip }: { trip: Trip }) {
                     </div>
                 )
             })}
+            {/* Signature Section */}
+            {user?.signature_url && (
+                <div className="mt-16 pt-8 border-t-2 border-black break-inside-avoid text-black">
+                    <div className="flex flex-col items-center justify-center">
+                        <img
+                            src={user.signature_url}
+                            alt="Assinatura"
+                            className="h-24 w-auto object-contain mix-blend-multiply"
+                        />
+                        <div className="mt-2 text-center">
+                            <p className="font-bold text-base tracking-[0.25em] uppercase">{user.name}</p>
+                            <div className="h-0.5 w-64 bg-black my-2 mx-auto" />
+                            <p className="text-xs font-bold uppercase tracking-widest">Responsável Técnico</p>
+                            <p className="text-[10px] text-gray-600 mt-3 italic font-mono">
+                                Validação Digital realizada em {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
