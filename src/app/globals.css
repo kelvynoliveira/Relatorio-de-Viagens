@@ -119,6 +119,10 @@
 }
 
 @media print {
+  @page {
+    margin: 15mm 10mm;
+  }
+
   :root {
     --background: #ffffff !important;
     --foreground: #000000 !important;
