@@ -418,9 +418,9 @@ export default function TabReport({ trip }: { trip: Trip }) {
     // actually, I can just copy the previous implementation for print logic and wrap it in `renderPrintConsolidated` etc.
 
     const renderPrintConsolidated = () => (
-        <div className="bg-white text-black p-8 shadow-sm border rounded-lg min-h-[29.7cm] print:min-h-0 print:shadow-none print:border-none print:w-full print:p-0">
-            {/* Print Header (Spacer for Fixed Header) */}
-            <div className="h-[25mm] print:block hidden" />
+        <div className="bg-white text-black print:w-full print:p-0">
+            {/* Print Header Spacer */}
+            <div className="h-[15mm] print:block hidden" />
 
             {/* Trip Title */}
             <div className="border-b-2 border-primary pb-2 mb-6 mt-4">
@@ -1057,9 +1057,8 @@ export default function TabReport({ trip }: { trip: Trip }) {
                         position: relative;
                         width: 100%;
                         margin: 0;
-                        padding: 0 1cm; /* Force 1cm side margins */
+                        padding: 0 0.5cm; /* Safe side padding */
                         box-sizing: border-box;
-                        display: block;
                     }
                     /* Ensure children are visible */
                     #print-container * {
