@@ -1054,23 +1054,22 @@ export default function TabReport({ trip }: { trip: Trip }) {
 
             <style jsx global>{`
                 @media print {
-                    @page { margin: 1cm; size: auto; }
+                    @page { margin: 1cm 1.5cm; size: auto; }
                     body {
                         visibility: hidden;
-                        background: white;
+                        background: white !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
                     }
-                    /* Print Overlay Container */
                     #print-container {
                         visibility: visible;
-                        position: absolute;
-                        left: 0;
-                        top: 0;
+                        position: relative;
                         width: 100%;
+                        margin: 0 auto;
                     }
                     /* Ensure children are visible */
                     #print-container * {
                         visibility: visible;
-                        position: relative;
                     }
 
                      /* Utilities */
