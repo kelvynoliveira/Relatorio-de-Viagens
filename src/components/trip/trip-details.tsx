@@ -6,12 +6,13 @@ import { useState } from 'react';
 import { Button, MotionButton } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, ChevronLeft, MapPin, CalendarDays, Receipt, Car, Map as MapIcon, ClipboardList, FileText, Trash2, Edit, Clock, Coins } from 'lucide-react';
+import { Loader2, ChevronLeft, MapPin, CalendarDays, Receipt, Car, Map as MapIcon, ClipboardList, FileText, Trash2, Edit, Clock, Coins, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency, formatDistance, formatDuration } from '@/lib/utils';
 import { calculateTripStats } from '@/lib/trip-utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Sub-components
@@ -38,7 +39,7 @@ interface TripDetailsProps {
 
 export default function TripDetails({ tripId, readonly = false }: TripDetailsProps) {
     const router = useRouter();
-    const { trips, deleteTrip, isLoading } = useTripStore();
+    const { trips, deleteTrip, updateTrip, isLoading } = useTripStore();
     const trip = trips.find(t => t.id === tripId);
     const [activeTab, setActiveTab] = useState('itinerary');
     const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
@@ -57,6 +58,20 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
     const handleDelete = () => {
         deleteTrip(trip.id);
         router.push('/dashboard');
+    };
+
+    const handleComplete = async () => {
+        const confirmed = window.confirm('Deseja finalizar esta viagem? Isso marcará o relatório como concluído.');
+        if (confirmed) {
+            try {
+                await updateTrip(trip.id, { status: 'completed' });
+                toast.success('Viagem finalizada com sucesso!');
+                setActiveTab('report');
+            } catch (error) {
+                console.error('Erro ao finalizar viagem:', error);
+                toast.error('Erro ao finalizar viagem.');
+            }
+        }
     };
 
     // Calculate Stats
@@ -100,6 +115,8 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
             setActiveTab('report');
         } else if (action === 'expenses') {
             setIsExpenseWizardOpen(true);
+        } else if (action === 'complete') {
+            handleComplete();
         }
     };
 
@@ -165,6 +182,17 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         {!readonly && (
                             <>
+                                {trip.status === 'in_progress' && (
+                                    <MotionButton
+                                        onClick={handleComplete}
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-full px-6 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                                        Finalizar
+                                    </MotionButton>
+                                )}
                                 <Link href={`/trips/${trip.id}/edit`} className="flex-1 md:flex-none">
                                     <MotionButton 
                                         variant="outline" 

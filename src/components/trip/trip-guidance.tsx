@@ -159,7 +159,7 @@ export default function TripGuidance({ trip, stats, onAction }: TripGuidanceProp
             items: [
                 { label: 'Conferir resumo final', done: isCompleted }
             ],
-            action: { label: 'Ver Relatório', cmd: 'report' }
+            action: { label: isInProgress ? 'Finalizar Viagem' : 'Ver Relatório', cmd: isInProgress ? 'complete' : 'report' }
         }
     ];
 
