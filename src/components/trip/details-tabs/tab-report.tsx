@@ -1021,23 +1021,26 @@ export default function TabReport({ trip }: { trip: Trip }) {
             <style jsx global>{`
                 @media print {
                     @page { 
-                        margin: 1.5cm; 
+                        margin: 1cm; 
                         size: auto; 
                     }
                     body {
+                        visibility: hidden;
                         background: white !important;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
                     }
-                    /* Hide everything except print-container */
-                    body > *:not(#print-container) {
-                        display: none !important;
-                    }
                     #print-container {
+                        visibility: visible;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
                         display: block !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
+                    }
+                    /* Ensure children are visible */
+                    #print-container * {
+                        visibility: visible;
                     }
                     .break-before-page {
                         page-break-before: always;
