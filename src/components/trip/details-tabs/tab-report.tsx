@@ -32,18 +32,6 @@ export default function TabReport({ trip }: { trip: Trip }) {
 
     const hasAnyOptionSelected = Object.values(reportOptions).some(Boolean);
 
-    // Inject print styles for fixed header/footer margins
-    const printStyles = `
-        @media print {
-            @page {
-                margin-top: 5mm;
-                margin-bottom: 20mm;
-            }
-            body {
-                -webkit-print-color-adjust: exact;
-            }
-        }
-    `;
 
     const handlePrint = () => {
         window.print();
@@ -827,7 +815,6 @@ export default function TabReport({ trip }: { trip: Trip }) {
 
     return (
         <div className="space-y-6">
-            <style dangerouslySetInnerHTML={{ __html: printStyles }} />
 
             {/* Print Header (Fixed on every page) */}
             <div className="hidden print:flex fixed top-0 left-0 right-0 h-[15mm] items-center justify-between border-b border-gray-200 bg-white z-50 print:visible">
@@ -1054,18 +1041,25 @@ export default function TabReport({ trip }: { trip: Trip }) {
 
             <style jsx global>{`
                 @media print {
-                    @page { margin: 1cm 1.5cm; size: auto; }
+                    @page { 
+                        margin: 1cm; 
+                        size: auto; 
+                    }
                     body {
                         visibility: hidden;
                         background: white !important;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
                     }
+                    /* Print Overlay Container */
                     #print-container {
                         visibility: visible;
                         position: relative;
                         width: 100%;
-                        margin: 0 auto;
+                        margin: 0;
+                        padding: 0 1cm; /* Force 1cm side margins */
+                        box-sizing: border-box;
+                        display: block;
                     }
                     /* Ensure children are visible */
                     #print-container * {
