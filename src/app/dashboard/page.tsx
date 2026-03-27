@@ -11,6 +11,7 @@ import { useMemo } from 'react';
 import { formatUserName } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Skeleton, StatsSkeleton, TripCardSkeleton } from '@/components/ui/skeleton';
+import DashboardCharts from '@/components/dashboard/dashboard-charts';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -102,6 +103,14 @@ export default function DashboardPage() {
 
                     <motion.div variants={itemVariants}>
                         <DashboardStats trips={userTrips} />
+                    </motion.div>
+
+                    <motion.div variants={itemVariants} className="space-y-6">
+                        <motion.h2 className="text-3xl font-black tracking-tight flex items-center gap-4 ml-4 mt-8">
+                            <div className="w-2.5 h-10 bg-blue-500 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.3)]" />
+                            Análise Estratégica
+                        </motion.h2>
+                        <DashboardCharts trips={userTrips} />
                     </motion.div>
 
                     <div className="space-y-8">
