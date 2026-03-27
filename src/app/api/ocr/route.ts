@@ -1,17 +1,25 @@
 import { ImageAnnotatorClient } from '@google-cloud/vision';
 import { NextResponse } from 'next/server';
+import path from 'path';
 
 // Initialize the client
-let clientOptions = {};
+let clientOptions: any = {};
 
-// For production (like Vercel), we can pass credentials as a string
+// 1. Check for JSON string (Vercel/Production)
 if (process.env.GOOGLE_CREDENTIALS_JSON) {
   try {
-    clientOptions = {
-      credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
-    };
-  } catch (e) {
-    console.error('Failed to parse GOOGLE_CREDENTIALS_JSON');
+    clientOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+    console.log('OCR: Google credentials loaded from JSON string');
+  } catch (e: any) {
+    console.error('OCR ERROR: Failed to parse GOOGLE_CREDENTIALS_JSON:', e.message);
+  }
+} 
+// 2. Check for File Path (Local development)
+else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS.startsWith('./')) {
+    clientOptions.keyFilename = path.join(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  } else {
+    clientOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   }
 }
 
@@ -23,6 +31,13 @@ export async function POST(req: Request) {
 
     if (!image) {
       return NextResponse.json({ error: 'Nenhuma imagem fornecida' }, { status: 400 });
+    }
+
+    if (!clientOptions.credentials && !clientOptions.keyFilename) {
+        return NextResponse.json({ 
+            error: 'Configuração Incompleta: Credenciais do Google não encontradas.',
+            details: 'Verifique a variável GOOGLE_CREDENTIALS_JSON na Vercel.'
+        }, { status: 500 });
     }
 
     // image is expected to be a base64 string (without the data:image/jpeg;base64, prefix)

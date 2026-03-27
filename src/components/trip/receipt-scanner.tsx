@@ -28,6 +28,11 @@ export function ReceiptScanner({ onScanComplete, className }: ReceiptScannerProp
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
     
+    // Clear input so selecting the same file again triggers onChange
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
     processAndUpload(file);
   };
 
