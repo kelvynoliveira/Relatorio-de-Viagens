@@ -1123,8 +1123,6 @@ export default function TabReport({ trip }: { trip: Trip }) {
                         left: 0;
                         top: 0;
                         width: 100%;
-                        padding: 1.5cm; /* Larger margins for elite look */
-                        box-sizing: border-box;
                         display: block !important;
                     }
                     /* Ensure children are visible */
@@ -1133,6 +1131,17 @@ export default function TabReport({ trip }: { trip: Trip }) {
                     }
                     .break-before-page {
                         page-break-before: always;
+                    }
+                    /* Recurring Footer Logic */
+                    .print-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    .print-footer {
+                        display: table-footer-group;
+                    }
+                    .print-footer-content {
+                        padding-top: 20px;
                     }
                 }
             `}</style>
@@ -1155,40 +1164,56 @@ export default function TabReport({ trip }: { trip: Trip }) {
                 </Tabs>
             </div>
 
-            {/* Print View: Stacked */}
+            {/* Print View: Table structure for recurring footer */}
             <div id="print-container" className="hidden print:block">
-                <div>
-                    {renderPrintConsolidated()}
-                </div>
-                <div className="break-before-page">
-                    {renderPrintTechnical()}
-                </div>
-
-                {/* Final Universal Signature Section (Right Aligned) */}
-                {user?.signature_url && (
-                    <div className="mt-12 flex justify-end pr-8">
-                        <div className="flex flex-col items-center w-64">
-                            {/* Signature Image - positioned to overlap the line slightly */}
-                            <div className="relative h-20 w-full flex items-center justify-center">
-                                <img
-                                    src={user.signature_url}
-                                    alt="Assinatura"
-                                    className="h-24 w-auto object-contain mix-blend-multiply relative z-10 -mb-4"
-                                />
-                            </div>
-                            
-                            {/* Signature Line */}
-                            <div className="h-0.5 w-full bg-black my-0" />
-                            
-                            <div className="mt-2 text-center">
-                                <p className="text-[10px] uppercase font-bold tracking-widest text-black">Responsável Técnico</p>
-                                <p className="text-[8px] text-gray-500 mt-2 italic font-mono">
-                                    Documento Validado Digitalmente em {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <table className="print-table">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div className="print-content">
+                                    <div>
+                                        {renderPrintConsolidated()}
+                                    </div>
+                                    <div className="break-before-page">
+                                        {renderPrintTechnical()}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    
+                    {/* Recurring Footer Signature */}
+                    {user?.signature_url && (
+                        <tfoot className="print-footer">
+                            <tr>
+                                <td>
+                                    <div className="print-footer-content flex justify-end pr-8">
+                                        <div className="flex flex-col items-center w-64">
+                                            {/* Signature Image */}
+                                            <div className="relative h-20 w-full flex items-center justify-center">
+                                                <img
+                                                    src={user.signature_url}
+                                                    alt="Assinatura"
+                                                    className="h-24 w-auto object-contain mix-blend-multiply relative z-10 -mb-4"
+                                                />
+                                            </div>
+                                            
+                                            {/* Signature Line */}
+                                            <div className="h-0.5 w-full bg-black my-0" />
+                                            
+                                            <div className="mt-2 text-center">
+                                                <p className="text-[10px] uppercase font-bold tracking-widest text-black">Responsável Técnico</p>
+                                                <p className="text-[8px] text-gray-500 mt-2 italic font-mono">
+                                                    Documento Validado Digitalmente em {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    )}
+                </table>
             </div>
 
         </div>
