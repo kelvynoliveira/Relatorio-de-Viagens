@@ -1,7 +1,7 @@
 import { Trip } from './models';
 
-export interface MonthlyExpense {
-  month: string;
+export interface TripExpense {
+  name: string;
   amount: number;
 }
 
@@ -10,24 +10,23 @@ export interface CategoryExpense {
   amount: number;
 }
 
+export interface TripKm {
+  name: string;
+  km: number;
+}
+
 /**
- * Groups expenses by month based on the trip's start date
+ * Gets expense data for each trip (Top 5 recent)
  */
-export function getMonthlyExpenseData(trips: Trip[]): MonthlyExpense[] {
-  const monthlyData: Record<string, number> = {};
+export function getTripExpenseData(trips: Trip[]): TripExpense[] {
+  // Filter out drafts and sort by date descending
+  const activeTrips = trips
+    .filter(t => t.status !== 'draft')
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+    .slice(0, 5) // Take last 5
+    .reverse(); // Show oldest to newest in chart
 
-  // Sort trips by date first
-  const sortedTrips = [...trips].sort((a, b) => 
-    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-  );
-
-  sortedTrips.forEach(trip => {
-    if (trip.status === 'draft') return;
-    
-    const date = new Date(trip.startDate);
-    const monthKey = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-    
-    // Calculate total expenses for this trip
+  return activeTrips.map(trip => {
     let tripTotal = 0;
     trip.fuelEntries?.forEach(e => tripTotal += e.pricePaid || 0);
     trip.tollEntries?.forEach(e => tripTotal += e.amount || 0);
@@ -36,17 +35,36 @@ export function getMonthlyExpenseData(trips: Trip[]): MonthlyExpense[] {
     trip.hotelEntries?.forEach(e => tripTotal += e.amount || 0);
     trip.otherEntries?.forEach(e => tripTotal += e.amount || 0);
 
-    monthlyData[monthKey] = (monthlyData[monthKey] || 0) + tripTotal;
+    return {
+      name: trip.title.length > 15 ? trip.title.substring(0, 12) + '...' : trip.title,
+      amount: tripTotal
+    };
   });
-
-  return Object.entries(monthlyData).map(([month, amount]) => ({
-    month: month.charAt(0).toUpperCase() + month.slice(1),
-    amount
-  }));
 }
 
 /**
- * Calculates expense distribution by category
+ * Calculates KM per trip (Top 5 recent)
+ */
+export function getTripKmData(trips: Trip[]): TripKm[] {
+  const activeTrips = trips
+    .filter(t => t.status !== 'draft')
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+    .slice(0, 5)
+    .reverse();
+
+  return activeTrips.map(trip => {
+    let tripKm = 0;
+    trip.legs?.forEach(l => tripKm += (l.distanceKm || 0));
+
+    return {
+      name: trip.title.length > 15 ? trip.title.substring(0, 12) + '...' : trip.title,
+      km: Math.round(tripKm)
+    };
+  });
+}
+
+/**
+ * Calculates expense distribution by category (Aggregated from all trips)
  */
 export function getCategoryDistribution(trips: Trip[]): CategoryExpense[] {
   const categories = {
@@ -74,33 +92,5 @@ export function getCategoryDistribution(trips: Trip[]): CategoryExpense[] {
     .map(([category, amount]) => ({
       category,
       amount
-    }));
-}
-
-/**
- * Calculates KM evolution per month
- */
-export function getMonthlyKmData(trips: Trip[]): { month: string, km: number }[] {
-    const monthlyData: Record<string, number> = {};
-
-    const sortedTrips = [...trips].sort((a, b) => 
-        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-    );
-
-    sortedTrips.forEach(trip => {
-        if (trip.status === 'draft') return;
-        
-        const date = new Date(trip.startDate);
-        const monthKey = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-        
-        let tripKm = 0;
-        trip.legs?.forEach(l => tripKm += (l.distanceKm || 0));
-
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + tripKm;
-    });
-
-    return Object.entries(monthlyData).map(([month, km]) => ({
-        month: month.charAt(0).toUpperCase() + month.slice(1),
-        km: Math.round(km)
     }));
 }

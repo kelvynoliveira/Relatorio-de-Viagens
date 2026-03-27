@@ -2,12 +2,11 @@
 
 import React, { useMemo } from 'react';
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { Trip } from '@/lib/models';
-import { getMonthlyExpenseData, getCategoryDistribution, getMonthlyKmData } from '@/lib/chart-utils';
+import { getTripExpenseData, getCategoryDistribution, getTripKmData } from '@/lib/chart-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 
@@ -16,67 +15,55 @@ interface DashboardChartsProps {
 }
 
 export default function DashboardCharts({ trips }: DashboardChartsProps) {
-  const expenseData = useMemo(() => getMonthlyExpenseData(trips), [trips]);
+  const tripExpenseData = useMemo(() => getTripExpenseData(trips), [trips]);
   const categoryData = useMemo(() => getCategoryDistribution(trips), [trips]);
-  const kmData = useMemo(() => getMonthlyKmData(trips), [trips]);
+  const kmData = useMemo(() => getTripKmData(trips), [trips]);
 
   if (trips.length === 0) return null;
 
   return (
     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-      {/* 1. Evolução Financeira (Area Chart) */}
+      {/* 1. Comparativo de Custo por Viagem (Bar Chart) */}
       <Card className="lg:col-span-2 glass-card border-white/5 overflow-hidden group">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
-            <div className="w-1.5 h-6 bg-primary rounded-full" />
-            Evolução Mensal (R$)
+            <div className="w-1.5 h-6 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(147,51,234,0.3)]" />
+            Gastos por Viagem (R$)
           </CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={expenseData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#9333ea" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#9333ea" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
+            <BarChart data={tripExpenseData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
               <XAxis 
-                dataKey="month" 
+                dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#888', fontSize: 12 }} 
-                dy={10} 
+                tick={{ fill: '#888', fontSize: 11 }} 
               />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#888', fontSize: 12 }}
+                tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={(value) => `R$ ${value}`}
               />
               <Tooltip 
+                cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                 contentStyle={{ 
                   backgroundColor: 'rgba(0,0,0,0.8)', 
                   borderColor: 'rgba(255,255,255,0.1)', 
                   borderRadius: '1rem',
-                  backdropFilter: 'blur(8px)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-                  border: '1px solid rgba(255,255,255,0.1)'
+                  backdropFilter: 'blur(8px)'
                 }}
                 itemStyle={{ color: '#fff', fontWeight: 'bold' }}
                 formatter={(value: any) => [formatCurrency(Number(value)), 'Total Gasto']}
               />
-              <Area 
-                type="monotone" 
-                dataKey="amount" 
-                stroke="#9333ea" 
-                strokeWidth={4} 
-                fillOpacity={1} 
-                fill="url(#colorAmount)" 
-                animationDuration={2000}
-              />
-            </AreaChart>
+              <Bar dataKey="amount" radius={[8, 8, 0, 0]} animationDuration={1500}>
+                {tripExpenseData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill="#9333ea" opacity={0.8 - (index * 0.1)} />
+                ))}
+              </Bar>
+            </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
@@ -112,20 +99,20 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
         </CardContent>
       </Card>
 
-      {/* 3. KM Percorridos (Bar Chart) */}
+      {/* 3. KM por Viagem (Bar Chart) */}
       <Card className="lg:col-span-3 glass-card border-white/5 overflow-hidden">
         <CardHeader className="pb-2">
             <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
               <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
-              Evolução de KM Percorrido
+              KM por Rodagem
             </CardTitle>
         </CardHeader>
         <CardContent className="h-[250px] pt-4">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={kmData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 11 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 11 }} />
               <Tooltip 
                 cursor={{ fill: 'rgba(255,255,255,0.02)' }}
                 contentStyle={{ backgroundColor: 'black', borderRadius: '12px', border: 'none' }}
@@ -133,7 +120,7 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
               />
               <Bar dataKey="km" radius={[8, 8, 0, 0]} animationDuration={1000}>
                 {kmData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#10b981' : '#34d399'} opacity={0.8} />
+                  <Cell key={`cell-${index}`} fill="#10b981" opacity={0.8 - (index * 0.1)} />
                 ))}
               </Bar>
             </BarChart>
