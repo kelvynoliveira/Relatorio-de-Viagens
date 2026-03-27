@@ -93,6 +93,17 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
     };
 
     const handleComplete = () => {
+        const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        const endDateStr = trip.endDate; // Assuming it's YYYY-MM-DD
+
+        if (todayStr < endDateStr) {
+            const formattedDate = new Date(trip.endDate + 'T12:00:00').toLocaleDateString('pt-BR');
+            toast.error(`Viagem ainda em curso. Você só poderá finalizar a partir de ${formattedDate}.`, {
+                description: "O relatório técnico só pode ser gerado após a data de término prevista.",
+                duration: 5000
+            });
+            return;
+        }
         setIsConfirmDialogOpen(true);
     };
 
