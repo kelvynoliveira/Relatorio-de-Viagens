@@ -124,7 +124,6 @@ export default function TripWizard({ initialTrip }: { initialTrip?: Trip }) {
 
     const onSubmit = async (data: Trip) => {
         console.log('[TripWizard] onSubmit TRIGGERED!', { data, isSubmitting });
-        toast.info('DEBUG: Submit disparado!'); // Temporary debug toast
 
         if (!data.userId) {
             toast.error('Sessão expirada ou usuário não carregado. Tente recarregar a página.');
