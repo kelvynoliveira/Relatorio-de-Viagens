@@ -5,7 +5,8 @@ import { useTripStore } from '@/lib/store';
 import { Button, MotionButton } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, MapPin, CalendarDays, Clock, PenTool } from 'lucide-react';
+import { ArrowLeft, MapPin, CalendarDays, Clock, PenTool, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import TripCard from '@/components/trip/trip-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -335,15 +336,84 @@ export default function TechnicianDetailsPage() {
                     )}
                 </TabsContent>
 
-                <TabsContent value="history" className="mt-6 animate-in fade-in duration-500">
-                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                        {pastTrips.map(trip => (
-                            <div key={trip.id} className="transition-all hover:scale-[1.02]">
-                                <TripCard trip={trip} readonly={true} />
-                            </div>
-                        ))}
-                    </div>
-                    {pastTrips.length === 0 && (
+                <TabsContent value="history" className="space-y-8 animate-in fade-in duration-500">
+                    {pastTrips.length > 0 ? (
+                        <div className="space-y-8">
+                            {pastTrips.map(trip => (
+                                <div key={trip.id} className="glass-card border-white/5 rounded-[3rem] p-10 md:p-14 space-y-12 overflow-hidden relative opacity-80 hover:opacity-100 transition-opacity group">
+                                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <CheckCircle2 className="w-40 h-40 text-emerald-500" />
+                                    </div>
+
+                                    <div className="flex flex-col lg:flex-row justify-between items-start gap-8 relative z-10">
+                                        <div className="space-y-4 max-w-2xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                                                <h3 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tighter">{trip.title}</h3>
+                                                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 uppercase font-black tracking-widest text-[10px] py-1 px-3 rounded-full">Concluída</Badge>
+                                            </div>
+                                            <div className="flex flex-wrap items-center text-muted-foreground font-medium gap-6">
+                                                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                                                    <CalendarDays className="w-4 h-4 text-emerald-500" />
+                                                    <span className="text-sm tracking-tight">
+                                                        {new Date(trip.startDate).toLocaleDateString()} — {trip.endDate ? new Date(trip.endDate).toLocaleDateString() : '--'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                                                    <MapPin className="w-4 h-4 text-emerald-500" />
+                                                    <span className="text-sm tracking-tight">{trip.originCity}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Link href={`/manager/trips/${trip.id}`}>
+                                            <MotionButton 
+                                                className="h-14 px-8 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-black text-xs uppercase tracking-widest transition-all"
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                Ver Detalhes <ArrowRight className="ml-3 h-4 w-4 rotate-0 stroke-[3]" />
+                                            </MotionButton>
+                                        </Link>
+                                    </div>
+
+                                    <Separator className="bg-white/5" />
+
+                                    <div className="grid lg:grid-cols-2 gap-12 relative z-10">
+                                        <div className="space-y-6">
+                                            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/50 border-l-2 border-emerald-500/30 pl-3">Resumo da Missão</h4>
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between p-4 bg-white/2 rounded-2xl border border-white/5">
+                                                    <span className="text-sm font-bold text-muted-foreground">Atendimentos Realizados</span>
+                                                    <span className="text-lg font-black text-white">{trip.visits.filter(v => v.status === 'done').length}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between p-4 bg-white/2 rounded-2xl border border-white/5">
+                                                    <span className="text-sm font-bold text-muted-foreground">Distância Total Percorrida</span>
+                                                    <span className="text-lg font-black text-white">{trip.legs.reduce((a, b) => a + (b.distanceKm || 0), 0).toFixed(1)} KM</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/50 border-l-2 border-emerald-500/30 pl-3">Investimento Total</h4>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {[
+                                                    { label: 'Combustível', val: trip.fuelEntries.reduce((a, b: any) => a + b.pricePaid, 0) },
+                                                    { label: 'Alimentação', val: (trip.foodEntries || []).reduce((a, b: any) => a + b.amount, 0) },
+                                                    { label: 'Pedágios', val: trip.tollEntries.reduce((a, b: any) => a + b.amount, 0) },
+                                                    { label: 'Outros', val: (trip.otherEntries || []).reduce((a, b: any) => a + b.amount, 0) }
+                                                ].map(item => (
+                                                    <div key={item.label} className="bg-white/2 border border-white/5 p-5 rounded-2xl">
+                                                        <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-1">{item.label}</div>
+                                                        <div className="text-xl font-black text-white">R$ {item.val.toFixed(2)}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
                         <div className="text-center py-20 bg-white/5 rounded-[3rem] border border-dashed border-white/5">
                             <p className="text-muted-foreground/60 font-medium italic">Ficha técnica limpa. Nenhum histórico disponível.</p>
                         </div>
