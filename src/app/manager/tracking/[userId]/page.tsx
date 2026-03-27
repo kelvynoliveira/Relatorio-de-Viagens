@@ -2,20 +2,20 @@
 
 import { useParams } from 'next/navigation';
 import { useTripStore } from '@/lib/store';
-import { Button } from '@/components/ui/button';
+import { Button, MotionButton } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, MapPin, CalendarDays, Clock } from 'lucide-react';
+import { ArrowLeft, MapPin, CalendarDays, Clock, PenTool } from 'lucide-react';
 import Link from 'next/link';
 import TripCard from '@/components/trip/trip-card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
 import { useState, useEffect } from 'react';
 import { User } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
+import { motion } from 'framer-motion';
 
 export default function TechnicianDetailsPage() {
     const params = useParams();
@@ -52,7 +52,9 @@ export default function TechnicianDetailsPage() {
         fetchProfile();
     }, [userId]);
 
-    // Filter trips by the userId from the URL (which corresponds to the technician)
+    const userTrips = trips.filter(t => t.userId === userId);
+    
+    // Improved Status Logic: Status manual + Date Check
     const now = new Date();
     const activeTrip = userTrips.find(t => {
         if (t.status !== 'in_progress') return false;
@@ -60,22 +62,21 @@ export default function TechnicianDetailsPage() {
         return now >= start;
     });
 
-    // Show all OTHER trips in history, including other active ones if they exist (edge case)
+    // Show all OTHER trips in history
     const pastTrips = userTrips.filter(t => t.id !== activeTrip?.id);
 
     const technicianStatus = activeTrip ? 'Em Viagem' : 'Disponível';
+    
     const currentLocation = (() => {
         if (!activeTrip) return 'Base';
 
-        // 1. Check legs (sorted by date)
         if (activeTrip.legs.length > 0) {
-            const sortedLegs = [...activeTrip.legs].sort((a, b) =>
+            const sortedLegs = [...activeTrip.legs].sort((a, b: any) =>
                 new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
             );
             return sortedLegs[0].to;
         }
 
-        // 2. Check latest visit
         if (activeTrip.visits.length > 0) {
             const latestVisit = activeTrip.visits[activeTrip.visits.length - 1];
             const campus = campuses.find((c: any) => c.id === latestVisit.campusId);
@@ -86,110 +87,151 @@ export default function TechnicianDetailsPage() {
     })();
 
     if (isLoadingProfile) {
-        return <div className="flex items-center justify-center min-h-[400px]">Carregando perfil...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Carregando perfil de elite...</p>
+            </div>
+        );
     }
 
     if (!technician) {
-        return <div className="text-center py-20">Técnico não encontrado.</div>;
+        return (
+            <div className="text-center py-20 bg-white/5 rounded-[3rem] border border-white/5">
+                <h2 className="text-2xl font-black text-white">Técnico não encontrado.</h2>
+                <Link href="/manager/tracking" className="mt-4 block text-primary font-bold">Voltar ao rastreamento</Link>
+            </div>
+        );
     }
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-500">
-            <div className="flex items-center gap-4">
+        <div className="space-y-10 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-center gap-6">
                 <Link href="/manager/tracking">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
+                    <MotionButton 
+                        variant="outline" 
+                        size="icon" 
+                        className="rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                        whileHover={{ scale: 1.1, x: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <ArrowLeft className="h-5 w-5 stroke-[2.5]" />
+                    </MotionButton>
                 </Link>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Detalhes do Técnico</h1>
-                </div>
+                <h1 className="text-4xl font-black tracking-tighter text-white">Detalhes do <span className="text-gradient">Técnico</span></h1>
             </div>
 
-            {/* Technician Profile Header */}
-            <Card className="glass-card border-white/5 rounded-[3rem] overflow-hidden relative group">
-                {/* Accent glow based on status */}
+            {/* Technician Profile Header - Premium Redesign */}
+            <Card className="glass-card border-white/5 rounded-[3.5rem] overflow-hidden relative group">
                 <div className={cn(
-                    "absolute -right-20 -top-20 w-80 h-80 rounded-full blur-[100px] opacity-20",
-                    activeTrip ? "bg-blue-500" : "bg-emerald-500"
+                    "absolute -right-20 -top-20 w-[30rem] h-[30rem] rounded-full blur-[120px] opacity-20 transition-all duration-1000",
+                    activeTrip ? "bg-blue-600" : "bg-emerald-600"
                 )} />
 
-                <CardContent className="p-10 flex flex-col md:flex-row items-center gap-10 relative z-10">
-                    <Avatar className="h-32 w-32 text-3xl border-8 border-white/5 shadow-2xl ring-4 ring-white/5">
-                        <AvatarImage src={technician.avatar_url} className="object-cover" />
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white font-black">
-                            {technician.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                <CardContent className="p-10 md:p-14 flex flex-col md:flex-row items-center gap-12 relative z-10">
+                    <div className="relative">
+                        <Avatar className="h-40 w-40 text-4xl border-[12px] border-white/5 shadow-2xl ring-4 ring-white/5">
+                            <AvatarImage src={technician.avatar_url} className="object-cover" />
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white font-black">
+                                {technician.name.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className={cn(
+                            "absolute bottom-2 right-2 w-8 h-8 rounded-full border-4 border-[#0a0a0b] shadow-xl",
+                            activeTrip ? "bg-blue-500" : "bg-emerald-500"
+                        )} />
+                    </div>
 
-                    <div className="flex-1 space-y-4 text-center md:text-left">
-                        <div className="space-y-1">
-                            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">{technician.name}</h2>
-                            <p className="text-muted-foreground text-lg font-medium">
-                                {technician.role === 'admin' ? 'Administrador' : 'Técnico de Campo'} • <span className="text-primary/80">{technician.email}</span>
-                            </p>
+                    <div className="flex-1 space-y-6 text-center md:text-left">
+                        <div className="space-y-2">
+                            <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-white leading-tight">{technician.name}</h2>
+                            <div className="flex flex-wrap justify-center md:justify-start items-center gap-3">
+                                <span className="text-primary font-black uppercase tracking-widest text-xs bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                                    {technician.role === 'admin' ? 'Administrador' : 'Técnico de Campo'}
+                                </span>
+                                <span className="text-muted-foreground/60 font-medium text-sm">{technician.email}</span>
+                            </div>
                         </div>
                         
                         <div className="flex flex-wrap justify-center md:justify-start gap-4">
                             <div className={cn(
-                                "flex items-center gap-2 px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em]",
-                                activeTrip ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+                                "flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all",
+                                activeTrip 
+                                    ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]" 
+                                    : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.1)]"
                             )}>
-                                <div className={cn("w-2 h-2 rounded-full animate-pulse", activeTrip ? "bg-blue-400" : "bg-emerald-400")} />
+                                <div className={cn("w-2 h-2 rounded-full", activeTrip ? "bg-blue-400 animate-pulse" : "bg-emerald-400")} />
                                 {technicianStatus}
                             </div>
                             
                             {activeTrip && (
-                                <div className="flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-muted-foreground/80">
+                                <div className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 backdrop-blur-md">
                                     <MapPin className="w-4 h-4 text-primary" />
-                                    <span>Atualmente em: <strong className="text-white">{currentLocation}</strong></span>
+                                    <span>Local: <strong className="text-white">{currentLocation}</strong></span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-center md:items-end gap-1 px-8 py-4 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-md">
-                        <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Viagens Totais</div>
-                        <div className="text-5xl font-black text-white leading-none">{userTrips.length}</div>
+                    <div className="flex flex-col items-center md:items-end p-8 bg-black/40 border border-white/5 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl">
+                        <div className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.4em] mb-2">Histórico</div>
+                        <div className="flex items-baseline gap-2 text-white">
+                            <span className="text-6xl font-black">{userTrips.length}</span>
+                            <span className="text-sm font-bold text-muted-foreground/60 uppercase">Viagens</span>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
             <Tabs defaultValue="active" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="active">Viagem Atual</TabsTrigger>
-                    <TabsTrigger value="history">Histórico</TabsTrigger>
+                <TabsList className="bg-white/5 p-1.5 rounded-2xl border border-white/5 mb-8 h-14">
+                    <TabsTrigger value="active" className="rounded-xl px-10 font-bold data-[state=active]:bg-primary data-[state=active]:text-black transition-all">Viagem Atual</TabsTrigger>
+                    <TabsTrigger value="history" className="rounded-xl px-10 font-bold data-[state=active]:bg-primary data-[state=active]:text-black transition-all">Histórico Completo</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="active" className="space-y-4 mt-6">
+                <TabsContent value="active" className="space-y-4 animate-in fade-in duration-500">
                     {activeTrip ? (
-                        <div className="border rounded-xl p-6 bg-card space-y-6">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-2">{activeTrip.title}</h3>
-                                    <div className="flex items-center text-muted-foreground gap-4 text-sm">
-                                        <div className="flex items-center gap-1">
-                                            <CalendarDays className="w-4 h-4" />
-                                            {new Date(activeTrip.startDate).toLocaleDateString()} - {activeTrip.endDate ? new Date(activeTrip.endDate).toLocaleDateString() : 'Em andamento'}
+                        <div className="glass-card border-white/5 rounded-[3rem] p-10 md:p-14 space-y-12 overflow-hidden relative">
+                             <div className="absolute top-0 right-0 p-8 opacity-5">
+                                <CalendarDays className="w-40 h-40 text-white" />
+                             </div>
+
+                            <div className="flex flex-col lg:flex-row justify-between items-start gap-8 relative z-10">
+                                <div className="space-y-4 max-w-2xl">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-1.5 h-6 bg-primary rounded-full" />
+                                        <h3 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tighter">{activeTrip.title}</h3>
+                                    </div>
+                                    <div className="flex flex-wrap items-center text-muted-foreground font-medium gap-6">
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                                            <CalendarDays className="w-4 h-4 text-primary" />
+                                            <span className="text-sm tracking-tight">
+                                                {new Date(activeTrip.startDate).toLocaleDateString()} — {activeTrip.endDate ? new Date(activeTrip.endDate).toLocaleDateString() : 'Em andamento'}
+                                            </span>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <MapPin className="w-4 h-4" />
-                                            {activeTrip.originCity}
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                                            <MapPin className="w-4 h-4 text-primary" />
+                                            <span className="text-sm tracking-tight">{activeTrip.originCity}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <Link href={`/manager/trips/${activeTrip.id}`}>
-                                    <Button>Ver Roteiro Completo</Button>
+                                    <MotionButton 
+                                        className="h-16 px-10 rounded-2xl bg-primary text-black font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/20"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Ver Roteiro <ArrowLeft className="ml-3 h-4 w-4 rotate-180 stroke-[3]" />
+                                    </MotionButton>
                                 </Link>
                             </div>
 
-                            <Separator />
+                            <Separator className="bg-white/5" />
 
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <h4 className="font-medium mb-3">Últimas Atividades</h4>
-                                    <div className="space-y-4">
-                                        {/* Activity summary based on itinerary order */}
+                            <div className="grid lg:grid-cols-2 gap-12 relative z-10">
+                                <div className="space-y-6">
+                                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/50 border-l-2 border-primary/30 pl-3">Linha do Tempo</h4>
+                                    <div className="space-y-6">
                                         {activeTrip.visits.length > 0 ? (
                                             [...activeTrip.visits]
                                                 .sort((a, b) => {
@@ -197,76 +239,90 @@ export default function TechnicianDetailsPage() {
                                                     const itemB = activeTrip.itinerary.find(i => i.campusId === b.campusId);
                                                     return (itemA?.order || 0) - (itemB?.order || 0);
                                                 })
-                                                .slice(0, 3)
+                                                .slice(0, 4)
                                                 .map((visit, i) => {
                                                     const campus = campuses.find(c => c.id === visit.campusId);
                                                     return (
-                                                        <div key={i} className="flex gap-3 text-sm">
-                                                            <div className={`w-2 h-2 mt-1.5 rounded-full ${visit.status === 'done' ? 'bg-green-500' : visit.status === 'in_progress' ? 'bg-blue-500' : 'bg-gray-300'}`} />
-                                                            <div>
-                                                                <p className="font-medium">
-                                                                    {campus ? campus.name : 'Visita'}
-                                                                </p>
-                                                                <p className="text-muted-foreground text-xs uppercase">
-                                                                    {visit.status === 'done' ? 'Concluída' : visit.status === 'in_progress' ? 'Em Andamento' : 'Pendente'}
+                                                        <div key={i} className="flex gap-5 items-center p-4 bg-white/2 rounded-[1.5rem] border border-transparent hover:border-white/5 transition-all">
+                                                            <div className={cn(
+                                                                "w-4 h-4 rounded-full shadow-lg",
+                                                                visit.status === 'done' ? 'bg-emerald-500 shadow-emerald-500/20' : visit.status === 'in_progress' ? 'bg-blue-500 shadow-blue-500/20' : 'bg-white/10'
+                                                            )} />
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-bold text-white truncate text-lg">{campus ? campus.name : 'Unidade Técnica'}</p>
+                                                                <p className="text-muted-foreground/60 text-[10px] font-black uppercase tracking-widest mt-0.5">
+                                                                    {visit.status === 'done' ? 'Fase Concluída' : visit.status === 'in_progress' ? 'Sendo Executado' : 'Aguardando Chegada'}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     );
                                                 })
                                         ) : (
-                                            <p className="text-sm text-muted-foreground">Nenhuma visita registrada ainda.</p>
+                                            <div className="p-8 rounded-[2rem] border border-dashed border-white/5 text-center">
+                                                <p className="text-sm font-bold text-muted-foreground/40 italic">Nenhuma atividade registrada na linha do tempo.</p>
+                                            </div>
                                         )}
                                         {activeTrip.legs.length > 0 && (
-                                            <div className="flex gap-3 text-sm">
-                                                <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500" />
+                                            <div className="flex gap-5 items-center p-4 bg-primary/5 rounded-[1.5rem] border border-primary/10">
+                                                <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
                                                 <div>
-                                                    <p className="font-medium">Deslocamento</p>
-                                                    <p className="text-muted-foreground">Para: {activeTrip.legs[activeTrip.legs.length - 1].to}</p>
+                                                    <p className="font-black text-white text-lg tracking-tight">Deslocamento em Curso</p>
+                                                    <p className="text-primary/70 text-[10px] font-black uppercase tracking-widest">Destino: {activeTrip.legs[activeTrip.legs.length - 1].to}</p>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <div>
-                                    <h4 className="font-medium mb-3">Resumo Financeiro</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-muted/50 p-3 rounded-lg">
-                                            <div className="text-xs text-muted-foreground">Combustível</div>
-                                            <div className="font-bold">R$ {activeTrip.fuelEntries.reduce((a, b) => a + b.pricePaid, 0).toFixed(2)}</div>
+                                <div className="space-y-6">
+                                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/50 border-l-2 border-primary/30 pl-3">Visão Financeira</h4>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="bg-white/2 border border-white/5 p-6 rounded-[2rem] group hover:bg-white/5 transition-all">
+                                            <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-2">Combustível</div>
+                                            <div className="text-2xl font-black text-white">R$ {activeTrip.fuelEntries.reduce((a, b: any) => a + b.pricePaid, 0).toFixed(2)}</div>
                                         </div>
-                                        <div className="bg-muted/50 p-3 rounded-lg">
-                                            <div className="text-xs text-muted-foreground">Alimentação</div>
-                                            <div className="font-bold">R$ {(activeTrip.foodEntries || []).reduce((a, b) => a + b.amount, 0).toFixed(2)}</div>
+                                        <div className="bg-white/2 border border-white/5 p-6 rounded-[2rem] group hover:bg-white/5 transition-all">
+                                            <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-2">Alimentação</div>
+                                            <div className="text-2xl font-black text-white">R$ {(activeTrip.foodEntries || []).reduce((a, b: any) => a + b.amount, 0).toFixed(2)}</div>
                                         </div>
-                                        <div className="bg-muted/50 p-3 rounded-lg">
-                                            <div className="text-xs text-muted-foreground">Pedágios</div>
-                                            <div className="font-bold">R$ {activeTrip.tollEntries.reduce((a, b) => a + b.amount, 0).toFixed(2)}</div>
+                                        <div className="bg-white/2 border border-white/5 p-6 rounded-[2rem] group hover:bg-white/5 transition-all">
+                                            <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-2">Pedágios</div>
+                                            <div className="text-2xl font-black text-white">R$ {activeTrip.tollEntries.reduce((a, b: any) => a + b.amount, 0).toFixed(2)}</div>
                                         </div>
-                                        <div className="bg-muted/50 p-3 rounded-lg">
-                                            <div className="text-xs text-muted-foreground">Outros</div>
-                                            <div className="font-bold">R$ {(activeTrip.otherEntries || []).reduce((a, b) => a + b.amount, 0).toFixed(2)}</div>
+                                        <div className="bg-white/2 border border-white/5 p-6 rounded-[2rem] group hover:bg-white/5 transition-all">
+                                            <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-2">Outros</div>
+                                            <div className="text-2xl font-black text-white">R$ {(activeTrip.otherEntries || []).reduce((a, b: any) => a + b.amount, 0).toFixed(2)}</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="text-center py-12 border-2 border-dashed rounded-xl">
-                            <p className="text-muted-foreground">O técnico não está em nenhuma viagem no momento.</p>
+                        <div className="text-center py-20 bg-white/5 border-2 border-dashed border-white/5 rounded-[3rem] group">
+                            <motion.div 
+                                className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform"
+                                animate={{ y: [0, -10, 0] }}
+                                transition={{ repeat: Infinity, duration: 3 }}
+                            >
+                                <PenTool className="w-8 h-8 text-muted-foreground/30" />
+                            </motion.div>
+                            <p className="text-xl font-bold text-muted-foreground/40 tracking-tight">O técnico não está em nenhuma viagem ativa no momento.</p>
                         </div>
                     )}
                 </TabsContent>
 
-                <TabsContent value="history" className="mt-6">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <TabsContent value="history" className="mt-6 animate-in fade-in duration-500">
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                         {pastTrips.map(trip => (
-                            <TripCard key={trip.id} trip={trip} readonly={true} />
+                            <div key={trip.id} className="transition-all hover:scale-[1.02]">
+                                <TripCard trip={trip} readonly={true} />
+                            </div>
                         ))}
                     </div>
                     {pastTrips.length === 0 && (
-                        <p className="text-muted-foreground italic">Nenhum histórico disponível.</p>
+                        <div className="text-center py-20 bg-white/5 rounded-[3rem] border border-dashed border-white/5">
+                            <p className="text-muted-foreground/60 font-medium italic">Ficha técnica limpa. Nenhum histórico disponível.</p>
+                        </div>
                     )}
                 </TabsContent>
             </Tabs>
