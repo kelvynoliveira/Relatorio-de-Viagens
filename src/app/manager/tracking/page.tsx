@@ -62,26 +62,45 @@ export default function ManagerTrackingPage() {
         const now = new Date();
         const activeTrip = techTrips.find(t => {
             if (t.status !== 'in_progress') return false;
-            const start = new Date(t.startDate);
+            const start = t.startDate ? new Date(t.startDate) : new Date(0);
             return now >= start;
         });
 
         if (activeTrip) {
-            // 1. Check last leg destination (sorted by date)
-            if (activeTrip.legs.length > 0) {
-                const sortedLegs = [...activeTrip.legs].sort((a, b) =>
-                    new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
-                );
-                return { city: sortedLegs[0].to, status: 'Em Viagem', tripName: activeTrip.title };
+            // Priority 1: Check for an active session in any visit
+            for (const visit of activeTrip.visits) {
+                const hasActiveSession = visit.sessions.some(s => !s.endAt);
+                if (hasActiveSession) {
+                    const campus = campuses.find(c => c.id === visit.campusId);
+                    if (campus) {
+                        return { city: campus.name, status: 'Em Atendimento', tripName: activeTrip.title };
+                    }
+                }
             }
 
-            // 2. Check for latest visit if no legs
-            if (activeTrip.visits.length > 0) {
-                const latestVisit = activeTrip.visits[activeTrip.visits.length - 1];
-                const campus = campuses.find((c: any) => c.id === latestVisit.campusId);
-                if (campus) {
-                    return { city: campus.city, status: 'Em Viagem', tripName: activeTrip.title };
+            // Priority 2: Get the most recent event (Leg or Visit)
+            const events: { date: Date; location: string }[] = [];
+
+            activeTrip.legs.forEach(leg => {
+                const legDateStr = leg.date ? `${leg.date}T${leg.time || '00:00'}` : '';
+                const legDate = legDateStr ? new Date(legDateStr) : new Date(0);
+                events.push({ date: legDate, location: leg.to });
+            });
+
+            activeTrip.visits.forEach(visit => {
+                const campus = campuses.find(c => c.id === visit.campusId);
+                if (campus && visit.sessions.length > 0) {
+                    // Use the latest session start time
+                    const latestSession = [...visit.sessions].sort((a,b) => 
+                        new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
+                    )[0];
+                    events.push({ date: new Date(latestSession.startAt), location: campus.name });
                 }
+            });
+
+            if (events.length > 0) {
+                const latestEvent = events.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+                return { city: latestEvent.location, status: 'Em Viagem', tripName: activeTrip.title };
             }
 
             return { city: activeTrip.originCity, status: 'Em Viagem', tripName: activeTrip.title };

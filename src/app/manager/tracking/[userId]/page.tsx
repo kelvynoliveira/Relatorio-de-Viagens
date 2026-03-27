@@ -65,26 +65,50 @@ export default function TechnicianDetailsPage() {
     // Show all OTHER trips in history
     const pastTrips = userTrips.filter(t => t.id !== activeTrip?.id);
 
-    const technicianStatus = activeTrip ? 'Em Viagem' : 'Disponível';
-    
-    const currentLocation = (() => {
-        if (!activeTrip) return 'Base';
+    const currentLocationData = (() => {
+        if (!activeTrip) return { location: 'Base', status: 'Disponível' };
 
-        if (activeTrip.legs.length > 0) {
-            const sortedLegs = [...activeTrip.legs].sort((a, b: any) =>
-                new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
-            );
-            return sortedLegs[0].to;
+        // Priority 1: Check for an active session in any visit
+        for (const visit of activeTrip.visits) {
+            const hasActiveSession = visit.sessions.some(s => !s.endAt);
+            if (hasActiveSession) {
+                const campus = campuses.find(c => c.id === visit.campusId);
+                if (campus) {
+                    return { location: campus.name, status: 'Em Atendimento' };
+                }
+            }
         }
 
-        if (activeTrip.visits.length > 0) {
-            const latestVisit = activeTrip.visits[activeTrip.visits.length - 1];
-            const campus = campuses.find((c: any) => c.id === latestVisit.campusId);
-            if (campus) return campus.city;
+        // Priority 2: Get the most recent event (Leg or Visit)
+        const events: { date: Date; location: string }[] = [];
+
+        activeTrip.legs.forEach(leg => {
+            const legDate = leg.date ? new Date(`${leg.date}T${leg.time || '00:00'}`) : new Date(0);
+            events.push({ date: legDate, location: leg.to });
+        });
+
+        activeTrip.visits.forEach(visit => {
+            const campus = campuses.find(c => c.id === visit.campusId);
+            if (campus && visit.sessions.length > 0) {
+                const latestSession = [...visit.sessions].sort((a, b) =>
+                    new Date(b.startAt || 0).getTime() - new Date(a.startAt || 0).getTime()
+                )[0];
+                if (latestSession && latestSession.startAt) {
+                    events.push({ date: new Date(latestSession.startAt), location: campus.name });
+                }
+            }
+        });
+
+        if (events.length > 0) {
+            const latestEvent = events.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+            return { location: latestEvent.location, status: 'Em Viagem' };
         }
 
-        return activeTrip.originCity;
+        return { location: activeTrip.originCity, status: 'Em Viagem' };
     })();
+
+    const currentLocation = currentLocationData.location;
+    const technicianStatus = currentLocationData.status;
 
     if (isLoadingProfile) {
         return (
