@@ -8,8 +8,15 @@ let clientOptions: any = {};
 // 1. Check for JSON string (Vercel/Production)
 if (process.env.GOOGLE_CREDENTIALS_JSON) {
   try {
-    clientOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-    console.log('OCR: Google credentials loaded from JSON string');
+    const creds = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+    
+    // Fix private key if needed (common in Vercel/Env variables)
+    if (creds.private_key && typeof creds.private_key === 'string') {
+      creds.private_key = creds.private_key.replace(/\\n/g, '\n');
+    }
+    
+    clientOptions.credentials = creds;
+    console.log('OCR: Google credentials loaded and formatted from JSON string');
   } catch (e: any) {
     console.error('OCR ERROR: Failed to parse GOOGLE_CREDENTIALS_JSON:', e.message);
   }
