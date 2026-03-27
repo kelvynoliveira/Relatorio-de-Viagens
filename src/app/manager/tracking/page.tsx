@@ -235,14 +235,14 @@ export default function ManagerTrackingPage() {
                                             {tech.name.substring(0, 2).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="flex-1 overflow-hidden space-y-1">
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors">{tech.name}</CardTitle>
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <CardTitle className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors truncate">{tech.name}</CardTitle>
                                             {isAdmin && (
                                                 <Button 
                                                     variant="ghost" 
                                                     size="icon" 
-                                                    className="h-8 w-8 rounded-full border border-white/5 hover:bg-white/10"
+                                                    className="h-8 w-8 flex-shrink-0 rounded-full border border-white/5 hover:bg-white/10"
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         setEditingTech(tech);
