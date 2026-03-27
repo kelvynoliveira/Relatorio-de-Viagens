@@ -139,41 +139,55 @@ export default function TabReport({ trip }: { trip: Trip }) {
                             </div>
                         </div>
 
-                        {/* Legs Nodes */}
-                        {[...trip.legs].sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime()).map((leg, i) => (
-                            <div key={leg.id} className="relative flex items-start gap-6 pb-12 group">
-                                <div className={cn(
-                                    "relative z-10 w-10 h-10 rounded-2xl flex items-center justify-center border border-white/10 shadow-xl transition-all group-hover:scale-110 bg-black/60 backdrop-blur-sm shrink-0",
-                                    leg.transportType === 'airplane' ? "text-sky-400 border-sky-500/20 shadow-sky-500/10" :
-                                    leg.transportType === 'car' ? "text-amber-500 border-amber-500/20 shadow-amber-500/10" :
-                                    leg.transportType === 'bus' ? "text-blue-400 border-blue-500/20 shadow-blue-500/10" : "text-zinc-400"
-                                )}>
-                                    {leg.transportType === 'airplane' ? <Plane className="w-5 h-5" /> :
-                                     leg.transportType === 'car' ? <CarFront className="w-5 h-5" /> :
-                                     leg.transportType === 'bus' ? <Bus className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
-                                </div>
-                                <div className="flex flex-col pt-1">
-                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">
-                                        {leg.transportType === 'airplane' ? 'Voo' : leg.transportType === 'car' ? 'Trânsito Via Carro' : 'Deslocamento'}
-                                    </span>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-lg font-bold text-white/70">{leg.from}</span>
-                                        <ArrowRight className="w-4 h-4 text-white/20" />
-                                        <span className="text-lg font-bold text-white">{leg.to}</span>
+                        {/* Logistics Items (Legs + Flights) */}
+                        {(() => {
+                            const allLogistics = [
+                                ...trip.legs.map(l => ({ ...l, type: 'leg' })),
+                                ...trip.plannedFlights.map(f => ({ ...f, type: 'flight', transportType: 'airplane' }))
+                            ].sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime());
+
+                            return allLogistics.map((item, i) => (
+                                <div key={item.id} className="relative flex items-start gap-6 pb-12 group">
+                                    <div className={cn(
+                                        "relative z-10 w-10 h-10 rounded-2xl flex items-center justify-center border border-white/10 shadow-xl transition-all group-hover:scale-110 bg-black/60 backdrop-blur-sm shrink-0",
+                                        item.transportType === 'airplane' ? "text-sky-400 border-sky-500/20 shadow-sky-500/10" :
+                                        item.transportType === 'car' ? "text-amber-500 border-amber-500/20 shadow-amber-500/10" :
+                                        item.transportType === 'bus' ? "text-blue-400 border-blue-500/20 shadow-blue-500/10" : "text-zinc-400"
+                                    )}>
+                                        {item.transportType === 'airplane' ? <Plane className="w-5 h-5" /> :
+                                         item.transportType === 'car' ? <CarFront className="w-5 h-5" /> :
+                                         item.transportType === 'bus' ? <Bus className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
                                     </div>
-                                    <div className="flex items-center gap-4 mt-1">
-                                        <span className="text-sm font-mono text-muted-foreground">
-                                            {leg.date ? format(new Date(leg.date), 'dd/MM HH:mm', { locale: ptBR || pt }) : '-'}
+                                    <div className="flex flex-col pt-1">
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">
+                                            {item.type === 'flight' ? 'Voo de Passageiro' :
+                                             item.transportType === 'airplane' ? 'Voo' : 
+                                             item.transportType === 'car' ? 'Trânsito Via Carro' : 'Deslocamento'}
                                         </span>
-                                        {leg.distanceKm && (
-                                            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-muted-foreground">
-                                                {formatDistance(leg.distanceKm)}
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-lg font-bold text-white/70">{item.from}</span>
+                                            <ArrowRight className="w-4 h-4 text-white/20" />
+                                            <span className="text-lg font-bold text-white">{item.to}</span>
+                                        </div>
+                                        <div className="flex items-center gap-4 mt-1">
+                                            <span className="text-sm font-mono text-muted-foreground">
+                                                {item.date ? format(new Date(item.date), 'dd/MM HH:mm', { locale: ptBR || pt }) : '-'}
                                             </span>
-                                        )}
+                                            {'flightNumber' in item && item.flightNumber && (
+                                                <span className="text-xs font-bold text-sky-400/80 bg-sky-500/5 px-2 py-0.5 rounded border border-sky-500/20">
+                                                    Voo: {item.flightNumber}
+                                                </span>
+                                            )}
+                                            {'distanceKm' in item && item.distanceKm && (
+                                                <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-muted-foreground">
+                                                    {formatDistance(item.distanceKm)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ));
+                        })()}
 
                         {/* Destination / End Node */}
                         <div className="relative flex items-start gap-6 group">
