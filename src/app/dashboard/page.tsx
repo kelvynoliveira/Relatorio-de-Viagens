@@ -11,12 +11,6 @@ import { useMemo } from 'react';
 import { formatUserName } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Skeleton, StatsSkeleton, TripCardSkeleton } from '@/components/ui/skeleton';
-import dynamic from 'next/dynamic';
-
-const TripMap = dynamic(() => import('@/components/dashboard/trip-map'), { 
-    ssr: false,
-    loading: () => <div className="w-full h-[400px] rounded-[2rem] bg-muted/20 animate-pulse" />
-});
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -105,10 +99,6 @@ export default function DashboardPage() {
                             </MotionButton>
                         </Link>
                     </motion.header>
-
-                    <motion.div variants={itemVariants}>
-                        <TripMap trips={userTrips} campuses={useTripStore().campuses} />
-                    </motion.div>
 
                     <motion.div variants={itemVariants}>
                         <DashboardStats trips={userTrips} />

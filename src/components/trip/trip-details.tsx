@@ -14,6 +14,12 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+
+const TripMap = dynamic(() => import('@/components/dashboard/trip-map'), { 
+    ssr: false,
+    loading: () => <div className="w-full h-[400px] rounded-[2rem] bg-muted/20 animate-pulse" />
+});
 
 // Sub-components
 import TabItinerary from '@/components/trip/details-tabs/tab-itinerary';
@@ -302,7 +308,8 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
                         transition={{ duration: 0.2 }}
                         className="min-h-[400px]"
                     >
-                        <TabsContent value="itinerary" className="mt-0">
+                        <TabsContent value="itinerary" className="mt-0 space-y-6">
+                            <TripMap trips={[trip]} campuses={useTripStore().campuses} />
                             <TabItinerary trip={trip} readonly={readonly} />
                         </TabsContent>
                         <TabsContent value="legs" className="mt-0">
