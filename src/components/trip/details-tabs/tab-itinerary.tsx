@@ -41,15 +41,22 @@ export default function TabItinerary({ trip, readonly = false }: { trip: Trip, r
 
                     {/* Complete Journey Timeline (Campuses + Legs + Flights) */}
                     {(() => {
+                        const getItemTimestamp = (item: any) => {
+                            if (!item.date) return 0;
+                            let dateStr = item.date;
+                            if (item.type === 'flight' && item.flightTime) {
+                                dateStr = `${item.date.split('T')[0]}T${item.flightTime}`;
+                            } else if (item.date.length === 10) {
+                                dateStr = `${item.date}T00:00:00`;
+                            }
+                            return new Date(dateStr).getTime();
+                        };
+
                         const allItems = [
                             ...trip.itinerary.map(item => ({ ...item, type: 'campus', date: item.plannedArrival })),
                             ...trip.legs.map(leg => ({ ...leg, type: 'leg' })),
                             ...trip.plannedFlights.map(flight => ({ ...flight, type: 'flight' }))
-                        ].sort((a, b) => {
-                            const dateA = new Date(a.date || '').getTime();
-                            const dateB = new Date(b.date || '').getTime();
-                            return dateA - dateB;
-                        });
+                        ].sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b));
 
                         return allItems.map((item, idx) => {
                             if (item.type === 'campus') {
@@ -124,7 +131,11 @@ export default function TabItinerary({ trip, readonly = false }: { trip: Trip, r
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-xs font-mono text-muted-foreground/60">
-                                                    {(item as any).date ? format(new Date((item as any).date), 'dd/MM HH:mm') : '-'}
+                                                    {(() => {
+                                                        const timestamp = getItemTimestamp(item);
+                                                        if (timestamp === 0) return '-';
+                                                        return format(new Date(timestamp), 'dd/MM' + (item.type === 'flight' && (item as any).flightTime ? ' HH:mm' : (item.type === 'leg' ? ' HH:mm' : '')), { locale: ptBR });
+                                                    })()}
                                                 </span>
                                             </div>
                                         </div>

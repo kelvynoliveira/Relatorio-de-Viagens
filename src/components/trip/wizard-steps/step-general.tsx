@@ -137,7 +137,7 @@ export default function StepGeneral() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => append({ id: generateId(), from: '', to: '', date: '', flightNumber: '', price: 0 })}
+                        onClick={() => append({ id: generateId(), from: '', to: '', date: '', flightNumber: '', flightTime: '', price: 0 })}
                     >
                         <Plus className="w-4 h-4 mr-2" /> Adicionar Voo
                     </Button>
@@ -208,9 +208,22 @@ export default function StepGeneral() {
                                         name={`plannedFlights.${index}.flightNumber`}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">Nº do Voo (Opcional)</FormLabel>
+                                                <FormLabel className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">Nº do Voo</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="Ex: AD1234" {...field} value={field.value ?? ''} className="h-9 bg-white/5 border-white/10 focus:border-primary/50 focus:bg-white/10 transition-all font-mono" />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={control}
+                                        name={`plannedFlights.${index}.flightTime`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">Horário do Voo</FormLabel>
+                                                <FormControl>
+                                                    <Input type="time" {...field} value={field.value ?? ''} className="h-9 bg-white/5 border-white/10 focus:border-primary/50 focus:bg-white/10 transition-all font-mono" />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

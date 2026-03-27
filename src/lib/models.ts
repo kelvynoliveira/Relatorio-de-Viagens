@@ -144,6 +144,7 @@ export const PlannedFlightSchema = z.object({
   from: z.string().min(2, 'Origem obrigatória'),
   to: z.string().min(2, 'Destino obrigatório'),
   flightNumber: z.string().optional().nullable(),
+  flightTime: z.string().optional().nullable(),
   price: z.union([z.number(), z.string(), z.null()])
     .optional()
     .transform(val => (val === '' || val === null || val === undefined) ? undefined : Number(String(val).replace(',', '.')))

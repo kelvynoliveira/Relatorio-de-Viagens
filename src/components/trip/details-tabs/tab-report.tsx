@@ -141,10 +141,23 @@ export default function TabReport({ trip }: { trip: Trip }) {
 
                         {/* Logistics Items (Legs + Flights) */}
                         {(() => {
+                            const getItemTimestamp = (item: any) => {
+                                if (!item.date) return 0;
+                                let dateStr = item.date;
+                                // If it's a flight with time, append it
+                                if (item.type === 'flight' && item.flightTime) {
+                                    dateStr = `${item.date.split('T')[0]}T${item.flightTime}`;
+                                } else if (item.date.length === 10) {
+                                    // Pure date YYYY-MM-DD -> treat as local midnight
+                                    dateStr = `${item.date}T00:00:00`;
+                                }
+                                return new Date(dateStr).getTime();
+                            };
+
                             const allLogistics = [
                                 ...trip.legs.map(l => ({ ...l, type: 'leg' })),
                                 ...trip.plannedFlights.map(f => ({ ...f, type: 'flight', transportType: 'airplane' }))
-                            ].sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime());
+                            ].sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b));
 
                             return allLogistics.map((item, i) => (
                                 <div key={item.id} className="relative flex items-start gap-6 pb-12 group">
@@ -171,7 +184,11 @@ export default function TabReport({ trip }: { trip: Trip }) {
                                         </div>
                                         <div className="flex items-center gap-4 mt-1">
                                             <span className="text-sm font-mono text-muted-foreground">
-                                                {item.date ? format(new Date(item.date), 'dd/MM HH:mm', { locale: ptBR || pt }) : '-'}
+                                                {(() => {
+                                                    const timestamp = getItemTimestamp(item);
+                                                    if (timestamp === 0) return '-';
+                                                    return format(new Date(timestamp), 'dd/MM' + (item.type === 'flight' && (item as any).flightTime ? ' HH:mm' : (item.type === 'leg' ? ' HH:mm' : '')), { locale: ptBR || pt });
+                                                })()}
                                             </span>
                                             {'flightNumber' in item && item.flightNumber && (
                                                 <span className="text-xs font-bold text-sky-400/80 bg-sky-500/5 px-2 py-0.5 rounded border border-sky-500/20">
