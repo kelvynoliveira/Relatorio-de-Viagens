@@ -41,17 +41,56 @@ export default function DashboardEmptyState({ userName }: DashboardEmptyStatePro
                 className="absolute bottom-[-10%] right-[-10%] w-80 h-80 bg-sky-500/10 rounded-full blur-3xl -z-10"
             />
 
-            {/* Icon Container with Lottie */}
+            {/* Icon Container with Native Animation */}
             <div className="relative mb-8">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/20 shadow-inner group-hover:border-primary/40 transition-colors overflow-hidden"
+                    className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 shadow-inner group-hover:border-primary/40 transition-colors overflow-hidden relative"
                 >
-                    <LottiePlayer 
-                        animationUrl="https://lottie.host/7413645e-49b0-466d-a129-9e8a5b2875b4/oYIDZz6EwL.json" 
-                        className="w-48 h-48" // Larger than container to handle internal padding
-                    />
+                    {/* Native Paper Plane SVG Animation */}
+                    <motion.svg
+                        viewBox="0 0 24 24"
+                        className="w-16 h-16 text-primary fill-none stroke-current"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ x: -10, y: 10, opacity: 0 }}
+                        animate={{ 
+                            x: [0, 5, 0], 
+                            y: [0, -5, 0],
+                            opacity: 1,
+                            rotate: [-2, 2, -2]
+                        }}
+                        transition={{ 
+                            duration: 4, 
+                            repeat: Infinity, 
+                            ease: "easeInOut" 
+                        }}
+                    >
+                        <path d="m22 2-7 20-4-9-9-4Z" />
+                        <path d="M22 2 11 13" />
+                    </motion.svg>
+                    
+                    {/* "Wind" lines */}
+                    {[0, 1, 2].map((i) => (
+                        <motion.div
+                            key={i}
+                            className="absolute bg-primary/20 h-[1px] rounded-full"
+                            style={{ 
+                                width: 20 + i * 10,
+                                left: -40,
+                                top: 40 + i * 15
+                            }}
+                            animate={{ x: [0, 200], opacity: [0, 1, 0] }}
+                            transition={{ 
+                                duration: 2, 
+                                repeat: Infinity, 
+                                delay: i * 0.6,
+                                ease: "linear"
+                            }}
+                        />
+                    ))}
                 </motion.div>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.0 }}

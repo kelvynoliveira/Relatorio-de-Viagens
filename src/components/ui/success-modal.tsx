@@ -33,11 +33,28 @@ export default function SuccessModal({ isOpen, onClose, title, message }: Succes
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-sky-500" />
             
-            <div className="w-48 h-48 mx-auto -mb-8">
-                <LottiePlayer 
-                    animationUrl="https://lottie.host/80408595-6e4b-4b2a-8c3b-d3da68a5f36e/lY4cZ0iEqU.json" 
-                    loop={false}
-                />
+            <div className="w-48 h-48 mx-auto -mb-4 flex items-center justify-center">
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                    className="w-24 h-24 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+                >
+                    <motion.svg
+                        viewBox="0 0 24 24"
+                        className="w-12 h-12 text-emerald-500 fill-none stroke-current"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <motion.path
+                            d="M20 6L9 17L4 12"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }}
+                        />
+                    </motion.svg>
+                </motion.div>
             </div>
 
             <h3 className="text-2xl font-black text-white mb-2">{title}</h3>
