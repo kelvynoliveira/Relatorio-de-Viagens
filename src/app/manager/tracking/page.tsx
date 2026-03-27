@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button, MotionButton } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, CalendarDays, ExternalLink, ArrowRight } from 'lucide-react';
+import { Search, MapPin, CalendarDays, ExternalLink, ArrowRight, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useMemo } from 'react';
@@ -15,7 +15,10 @@ import { User } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { LayoutGrid, Globe } from 'lucide-react';
+import { LayoutGrid, Globe, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 const TechnicianMap = dynamic(() => import('@/components/manager/technician-map'), { 
     ssr: false,
@@ -28,6 +31,11 @@ export default function ManagerTrackingPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
     const [technicians, setTechnicians] = useState<User[]>([]);
     const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+    const [editingTech, setEditingTech] = useState<User | null>(null);
+    const [newHomeCity, setNewHomeCity] = useState('');
+    const [isUpdatingBase, setIsUpdatingBase] = useState(false);
+    const { user: currentUser } = useTripStore();
+    const isAdmin = currentUser?.role === 'admin';
 
     useEffect(() => {
         async function fetchProfiles() {
@@ -135,6 +143,32 @@ export default function ManagerTrackingPage() {
         loc.tech.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const handleUpdateBase = async () => {
+        if (!editingTech || !newHomeCity.trim()) return;
+
+        try {
+            setIsUpdatingBase(true);
+            const { error } = await supabase
+                .from('profiles')
+                .update({ home_city: newHomeCity.trim() })
+                .eq('id', editingTech.id);
+
+            if (error) throw error;
+
+            setTechnicians(prev => prev.map(t => 
+                t.id === editingTech.id ? { ...t, home_city: newHomeCity.trim() } : t
+            ));
+
+            toast.success(`Base de ${editingTech.name} atualizada!`);
+            setEditingTech(null);
+        } catch (error: any) {
+            console.error('Error updating base:', error);
+            toast.error('Erro ao atualizar cidade base');
+        } finally {
+            setIsUpdatingBase(false);
+        }
+    };
+
     return (
         <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-500">
             <div>
@@ -202,7 +236,23 @@ export default function ManagerTrackingPage() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 overflow-hidden space-y-1">
-                                        <CardTitle className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors">{tech.name}</CardTitle>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors">{tech.name}</CardTitle>
+                                            {isAdmin && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-8 w-8 rounded-full border border-white/5 hover:bg-white/10"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setEditingTech(tech);
+                                                        setNewHomeCity(tech.home_city || '');
+                                                    }}
+                                                >
+                                                    <Edit3 className="w-4 h-4 text-muted-foreground" />
+                                                </Button>
+                                            )}
+                                        </div>
                                         <CardDescription className="font-medium text-muted-foreground/60 text-sm truncate uppercase tracking-widest">{tech.email}</CardDescription>
                                     </div>
                                 </CardHeader>
@@ -267,6 +317,54 @@ export default function ManagerTrackingPage() {
             ) : (
                 <TechnicianMap locations={filteredLocations} />
             )}
+
+            {/* Edit Base Dialog */}
+            <Dialog open={!!editingTech} onOpenChange={(open) => !open && setEditingTech(null)}>
+                <DialogContent className="sm:max-w-md border-white/5 bg-[#0a0a0b]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black text-white">Configurar Cidade Base</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-6 space-y-4">
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5">
+                            <Avatar className="h-12 w-12">
+                                <AvatarImage src={editingTech?.avatar_url} />
+                                <AvatarFallback className="font-bold">{editingTech?.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <div className="font-bold text-white">{editingTech?.name}</div>
+                                <div className="text-xs text-muted-foreground">{editingTech?.email}</div>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="base-city" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Cidade de Origem</Label>
+                            <Input 
+                                id="base-city"
+                                placeholder="Recife, São Paulo, Paripiranga..."
+                                value={newHomeCity}
+                                onChange={(e) => setNewHomeCity(e.target.value)}
+                                className="bg-white/5 border-white/10 rounded-xl h-12"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                            variant="ghost" 
+                            className="rounded-xl"
+                            onClick={() => setEditingTech(null)}
+                            disabled={isUpdatingBase}
+                        >
+                            Cancelar
+                        </Button>
+                        <MotionButton
+                            className="rounded-xl px-8 font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90"
+                            onClick={handleUpdateBase}
+                            disabled={isUpdatingBase || !newHomeCity.trim()}
+                        >
+                            {isUpdatingBase ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar Base'}
+                        </MotionButton>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
