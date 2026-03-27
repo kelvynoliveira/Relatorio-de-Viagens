@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { formatUserName } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { Skeleton, StatsSkeleton, TripCardSkeleton } from '@/components/ui/skeleton';
+import { Skeleton, StatsSkeleton, TripCardSkeleton, ChartsSkeleton } from '@/components/ui/skeleton';
 import DashboardCharts from '@/components/dashboard/dashboard-charts';
 
 const containerVariants = {
@@ -59,10 +59,8 @@ export default function DashboardPage() {
                 </div>
                 <StatsSkeleton />
                 <div className="space-y-6">
-                    <Skeleton className="h-8 w-48 rounded-lg" />
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {[1, 2, 3].map((i) => <TripCardSkeleton key={i} />)}
-                    </div>
+                    <Skeleton className="h-10 w-64 rounded-xl" />
+                    <ChartsSkeleton />
                 </div>
             </div>
         );

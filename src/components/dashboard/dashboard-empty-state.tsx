@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Plus, Compass, Map, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import LottiePlayer from '@/components/ui/lottie-player';
 
 interface DashboardEmptyStateProps {
     userName?: string;
@@ -40,30 +41,25 @@ export default function DashboardEmptyState({ userName }: DashboardEmptyStatePro
                 className="absolute bottom-[-10%] right-[-10%] w-80 h-80 bg-sky-500/10 rounded-full blur-3xl -z-10"
             />
 
-            {/* Icon Container */}
+            {/* Icon Container with Lottie */}
             <div className="relative mb-8">
                 <motion.div
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 shadow-inner group-hover:border-primary/40 transition-colors"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/20 shadow-inner group-hover:border-primary/40 transition-colors overflow-hidden"
                 >
-                    <Compass className="w-12 h-12 text-primary" />
+                    <LottiePlayer 
+                        animationUrl="https://lottie.host/7413645e-49b0-466d-a129-9e8a5b2875b4/oYIDZz6EwL.json" 
+                        className="w-48 h-48" // Larger than container to handle internal padding
+                    />
                 </motion.div>
                 <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
+                    initial={{ opacity: 0, scale: 0.0 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5, type: "spring" }}
-                    className="absolute -top-2 -right-2 bg-background rounded-full p-1.5 shadow-md border border-border"
+                    transition={{ delay: 1, type: "spring" }}
+                    className="absolute -top-2 -right-2 bg-background rounded-full p-2 shadow-xl border border-border"
                 >
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                </motion.div>
-                <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.7, type: "spring" }}
-                    className="absolute -bottom-1 -left-3 bg-background rounded-full p-2 shadow-md border border-border"
-                >
-                    <Map className="w-5 h-5 text-sky-500" />
+                    <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
                 </motion.div>
             </div>
 

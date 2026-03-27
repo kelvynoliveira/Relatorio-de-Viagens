@@ -37,6 +37,7 @@ import ExpenseWizardDrawer from '@/components/trip/drawers/expense-wizard-drawer
 import CampusVisitDrawer from '@/components/trip/drawers/campus-visit-drawer';
 import TripGuidance from './trip-guidance';
 import FloatingQuickActions from './floating-quick-actions';
+import SuccessModal from '@/components/ui/success-modal';
 
 interface TripDetailsProps {
     tripId: string;
@@ -56,6 +57,7 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
     const [isMobilityOpen, setIsMobilityOpen] = useState(false);
     const [isExpenseWizardOpen, setIsExpenseWizardOpen] = useState(false);
     const [isLegDrawerOpen, setIsLegDrawerOpen] = useState(false);
+    const [isSuccessOpen, setIsSuccessOpen] = useState(false);
     const [editingLeg, setEditingLeg] = useState<any>(null);
 
     if (isLoading) return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -67,11 +69,13 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
     };
 
     const handleComplete = async () => {
+        // We can keep the confirm for safety or create a custom one, 
+        // but for now let's focus on the success feedback
         const confirmed = window.confirm('Deseja finalizar esta viagem? Isso marcará o relatório como concluído.');
         if (confirmed) {
             try {
                 await updateTrip(trip.id, { status: 'completed' });
-                toast.success('Viagem finalizada com sucesso!');
+                setIsSuccessOpen(true);
                 setActiveTab('report');
             } catch (error) {
                 console.error('Erro ao finalizar viagem:', error);
@@ -142,6 +146,12 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20 md:pb-0">
+            <SuccessModal 
+                isOpen={isSuccessOpen} 
+                onClose={() => setIsSuccessOpen(false)}
+                title="Viagem Finalizada!"
+                message="Seu relatório técnico foi gerado com sucesso e está pronto para assinatura."
+            />
             {/* FAB actions */}
             {!readonly && <FloatingQuickActions onAction={handleQuickAction} />}
             {/* Hero Header */}

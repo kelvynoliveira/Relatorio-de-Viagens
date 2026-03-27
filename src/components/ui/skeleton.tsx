@@ -57,3 +57,12 @@ export function StatsSkeleton() {
     </div>
   )
 }
+export function ChartsSkeleton() {
+  return (
+    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <Skeleton className="lg:col-span-2 h-[380px] rounded-[3rem]" />
+      <Skeleton className="h-[380px] rounded-[3rem]" />
+      <Skeleton className="lg:col-span-3 h-[320px] rounded-[3rem]" />
+    </div>
+  )
+}
