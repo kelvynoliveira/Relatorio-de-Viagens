@@ -144,11 +144,10 @@ export default function TabReport({ trip }: { trip: Trip }) {
                             const getItemTimestamp = (item: any) => {
                                 if (!item.date) return 0;
                                 let dateStr = item.date;
-                                // If it's a flight with time, append it
-                                if (item.type === 'flight' && item.flightTime) {
-                                    dateStr = `${item.date.split('T')[0]}T${item.flightTime}`;
+                                const time = item.type === 'flight' ? item.flightTime : (item.type === 'leg' ? item.time : null);
+                                if (time) {
+                                    dateStr = `${item.date.split('T')[0]}T${time}`;
                                 } else if (item.date.length === 10) {
-                                    // Pure date YYYY-MM-DD -> treat as local midnight
                                     dateStr = `${item.date}T00:00:00`;
                                 }
                                 return new Date(dateStr).getTime();
@@ -187,7 +186,9 @@ export default function TabReport({ trip }: { trip: Trip }) {
                                                 {(() => {
                                                     const timestamp = getItemTimestamp(item);
                                                     if (timestamp === 0) return '-';
-                                                    return format(new Date(timestamp), 'dd/MM' + (item.type === 'flight' && (item as any).flightTime ? ' HH:mm' : (item.type === 'leg' ? ' HH:mm' : '')), { locale: ptBR || pt });
+                                                    const flightItem = item as any;
+                                                    const hasTime = item.type === 'flight' ? !!flightItem.flightTime : (item.type === 'leg' ? !!flightItem.time : false);
+                                                    return format(new Date(timestamp), 'dd/MM' + (hasTime ? ' HH:mm' : ''), { locale: ptBR || pt });
                                                 })()}
                                             </span>
                                             {'flightNumber' in item && item.flightNumber && (

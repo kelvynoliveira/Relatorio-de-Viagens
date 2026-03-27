@@ -44,8 +44,9 @@ export default function TabItinerary({ trip, readonly = false }: { trip: Trip, r
                         const getItemTimestamp = (item: any) => {
                             if (!item.date) return 0;
                             let dateStr = item.date;
-                            if (item.type === 'flight' && item.flightTime) {
-                                dateStr = `${item.date.split('T')[0]}T${item.flightTime}`;
+                            const time = item.type === 'flight' ? item.flightTime : (item.type === 'leg' ? item.time : null);
+                            if (time) {
+                                dateStr = `${item.date.split('T')[0]}T${time}`;
                             } else if (item.date.length === 10) {
                                 dateStr = `${item.date}T00:00:00`;
                             }
@@ -134,7 +135,9 @@ export default function TabItinerary({ trip, readonly = false }: { trip: Trip, r
                                                     {(() => {
                                                         const timestamp = getItemTimestamp(item);
                                                         if (timestamp === 0) return '-';
-                                                        return format(new Date(timestamp), 'dd/MM' + (item.type === 'flight' && (item as any).flightTime ? ' HH:mm' : (item.type === 'leg' ? ' HH:mm' : '')), { locale: ptBR });
+                                                        const anyItem = item as any;
+                                                        const hasTime = item.type === 'flight' ? !!anyItem.flightTime : (item.type === 'leg' ? !!anyItem.time : false);
+                                                        return format(new Date(timestamp), 'dd/MM' + (hasTime ? ' HH:mm' : ''), { locale: ptBR });
                                                     })()}
                                                 </span>
                                             </div>

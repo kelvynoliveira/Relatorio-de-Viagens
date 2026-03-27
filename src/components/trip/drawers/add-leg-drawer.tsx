@@ -191,24 +191,40 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
                                     />
                                 </div>
 
-                                <FormField
-                                    control={form.control}
-                                    name="date"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Data e Hora de Início</FormLabel>
-                                            <FormControl>
-                                                <div className="bg-white/5 border border-white/10 rounded-md p-1">
-                                                    <DateTimePicker
-                                                        date={field.value ? new Date(field.value) : undefined}
-                                                        setDate={(date) => field.onChange(date ? date.toISOString() : '')}
-                                                    />
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="date"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Data</FormLabel>
+                                                <FormControl>
+                                                    <div className="bg-white/5 border border-white/10 rounded-md p-1">
+                                                        <DateTimePicker
+                                                            date={field.value ? new Date(field.value) : undefined}
+                                                            setDate={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                                                            showTime={false}
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="time"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Horário</FormLabel>
+                                                <FormControl>
+                                                    <Input type="time" {...field} value={field.value ?? ''} className="bg-white/5 border-white/10 focus:border-primary/50 text-white h-10" />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
                                 {isDistance && (
                                     <FormField

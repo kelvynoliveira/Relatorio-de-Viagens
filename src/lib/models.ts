@@ -167,6 +167,7 @@ export const DisplacementLegSchema = z.object({
     .transform(val => (val === '' || val === null || val === undefined) ? undefined : Number(String(val).replace(',', '.')))
     .pipe(z.number().min(0, 'Custo inválido').optional()),
   date: permissiveDate.optional(),
+  time: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   photos: z.array(PhotoEntrySchema).default([]),
 });
