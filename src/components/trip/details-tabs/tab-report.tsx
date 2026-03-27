@@ -1108,7 +1108,7 @@ export default function TabReport({ trip }: { trip: Trip }) {
             <style jsx global>{`
                 @media print {
                     @page { 
-                        margin: 1cm; 
+                        margin: 1.5cm; /* Margins for overall page */
                         size: auto; 
                     }
                     body {
@@ -1124,6 +1124,7 @@ export default function TabReport({ trip }: { trip: Trip }) {
                         top: 0;
                         width: 100%;
                         display: block !important;
+                        padding: 0 0.5cm; /* Internal 1cm approx left/right padding */
                     }
                     /* Ensure children are visible */
                     #print-container * {
@@ -1137,11 +1138,20 @@ export default function TabReport({ trip }: { trip: Trip }) {
                         width: 100%;
                         border-collapse: collapse;
                     }
-                    .print-footer {
-                        display: table-footer-group;
+                    .print-footer-spacer {
+                        height: 120px; /* Reserves space at the bottom of every page */
                     }
-                    .print-footer-content {
-                        padding-top: 20px;
+                    .fixed-print-footer {
+                        position: fixed;
+                        bottom: 0px;
+                        left: 0;
+                        right: 0;
+                        height: 100px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-end;
+                        padding-right: 1.5cm;
+                        pointer-events: none;
                     }
                 }
             `}</style>
@@ -1164,8 +1174,34 @@ export default function TabReport({ trip }: { trip: Trip }) {
                 </Tabs>
             </div>
 
-            {/* Print View: Table structure for recurring footer */}
+            {/* Print View: Fixed Footer and Content Table */}
             <div id="print-container" className="hidden print:block">
+                {/* Fixed Signature Footer (repeats on every page automatically by browser if using fixed position) */}
+                {user?.signature_url && (
+                    <div className="fixed-print-footer">
+                        <div className="flex flex-col items-center w-64">
+                            {/* Signature Image */}
+                            <div className="relative h-16 w-full flex items-center justify-center">
+                                <img
+                                    src={user.signature_url}
+                                    alt="Assinatura"
+                                    className="h-20 w-auto object-contain mix-blend-multiply relative z-10 -mb-4"
+                                />
+                            </div>
+                            
+                            {/* Signature Line */}
+                            <div className="h-0.5 w-full bg-black my-0" />
+                            
+                            <div className="mt-1 text-center">
+                                <p className="text-[9px] uppercase font-bold tracking-widest text-black">Responsável Técnico</p>
+                                <p className="text-[7px] text-gray-500 mt-1 italic font-mono">
+                                    Documento Validado Digitalmente em {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <table className="print-table">
                     <tbody>
                         <tr>
@@ -1182,33 +1218,12 @@ export default function TabReport({ trip }: { trip: Trip }) {
                         </tr>
                     </tbody>
                     
-                    {/* Recurring Footer Signature */}
+                    {/* TFoot creates a spacer to prevent fixed footer overlap */}
                     {user?.signature_url && (
-                        <tfoot className="print-footer">
+                        <tfoot className="print-footer-spacer-group">
                             <tr>
                                 <td>
-                                    <div className="print-footer-content flex justify-end pr-8">
-                                        <div className="flex flex-col items-center w-64">
-                                            {/* Signature Image */}
-                                            <div className="relative h-20 w-full flex items-center justify-center">
-                                                <img
-                                                    src={user.signature_url}
-                                                    alt="Assinatura"
-                                                    className="h-24 w-auto object-contain mix-blend-multiply relative z-10 -mb-4"
-                                                />
-                                            </div>
-                                            
-                                            {/* Signature Line */}
-                                            <div className="h-0.5 w-full bg-black my-0" />
-                                            
-                                            <div className="mt-2 text-center">
-                                                <p className="text-[10px] uppercase font-bold tracking-widest text-black">Responsável Técnico</p>
-                                                <p className="text-[8px] text-gray-500 mt-2 italic font-mono">
-                                                    Documento Validado Digitalmente em {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div className="print-footer-spacer" />
                                 </td>
                             </tr>
                         </tfoot>
