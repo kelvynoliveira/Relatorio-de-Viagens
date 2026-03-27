@@ -184,12 +184,12 @@ export default function ManagerTrackingPage() {
 
                                 <Link href={`/manager/tracking/${tech.id}`} className="block">
                                     <MotionButton 
-                                        className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all border-white/5 hover:bg-white/10 group-hover:border-primary/50" 
+                                        className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] shadow-2xl transition-all border-white/5 hover:bg-white/10 group-hover:border-primary/50" 
                                         variant="outline"
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        Detalhes Completos <ArrowRight className="ml-3 h-4 w-4 stroke-[3]" />
+                                        Ver Detalhes <ArrowRight className="ml-2 h-3 w-3 stroke-[3]" />
                                     </MotionButton>
                                 </Link>
                             </CardContent>
