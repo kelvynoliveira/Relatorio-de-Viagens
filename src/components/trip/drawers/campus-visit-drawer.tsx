@@ -11,11 +11,12 @@ import { Input } from '@/components/ui/input';
 import { useTripStore } from '@/lib/store';
 import { DEFAULT_SCOPE_ITEMS } from '@/lib/constants';
 import { Play, Square, Plus, Camera, Minus, Trash2, Clock, Loader2, X } from 'lucide-react';
-import { formatDuration, generateId } from '@/lib/utils';
+import { formatDuration, generateId, fromInputDateTime, isDateInTripRange, parseISOAsLocal, toLocalISOString } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { CampusVisit, PhotoEntry } from '@/lib/models';
 import { PhotoUploader } from '@/components/ui/photo-uploader';
+import { DateTimePicker } from '@/components/ui/date-time-picker'; // Assuming this path for DateTimePicker
 
 interface CampusVisitDrawerProps {
     open: boolean;
@@ -122,8 +123,8 @@ export default function CampusVisitDrawer({ open, onOpenChange, tripId, visitId 
         let totalMin = 0;
         visit.sessions.forEach(s => {
             if (!s.startAt) return;
-            const end = s.endAt ? new Date(s.endAt as string).getTime() : new Date().getTime();
-            const start = new Date(s.startAt as string).getTime();
+            const end = s.endAt ? parseISOAsLocal(s.endAt as string).getTime() : new Date().getTime();
+            const start = parseISOAsLocal(s.startAt as string).getTime();
             totalMin += (end - start) / 1000 / 60;
         });
         return Math.floor(totalMin);
@@ -274,9 +275,9 @@ export default function CampusVisitDrawer({ open, onOpenChange, tripId, visitId 
                                     <div key={s.id} className="flex justify-between text-xs text-muted-foreground/60 font-mono">
                                         <span>Sessão {i + 1}</span>
                                         <span>
-                                            {s.startAt ? new Date(s.startAt as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                                            {s.startAt ? parseISOAsLocal(s.startAt as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
                                             {' - '}
-                                            {s.endAt ? new Date(s.endAt as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                                            {s.endAt ? parseISOAsLocal(s.endAt as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
                                         </span>
                                     </div>
                                 ))}

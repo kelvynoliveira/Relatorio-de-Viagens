@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { generateId, fromInputDateTime, isDateInTripRange } from '@/lib/utils';
+import { generateId, fromInputDateTime, isDateInTripRange, parseISOAsLocal, toLocalISOString } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -146,8 +146,8 @@ export default function AddMobilityDrawer({ open, onOpenChange, tripId, initialD
                                             <FormControl>
                                                 <div className="bg-white/5 border border-white/10 rounded-md p-1">
                                                     <DateTimePicker
-                                                        date={field.value ? new Date(field.value) : undefined}
-                                                        setDate={(date) => field.onChange(date ? date.toISOString() : '')}
+                                                        date={field.value ? parseISOAsLocal(field.value) : undefined}
+                                                        setDate={(date) => field.onChange(date ? toLocalISOString(date) : '')}
                                                     />
                                                 </div>
                                             </FormControl>

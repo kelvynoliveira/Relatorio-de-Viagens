@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/ui/currency-input';
-import { generateId, fromInputDateTime, isDateInTripRange } from '@/lib/utils';
+import { generateId, fromInputDateTime, isDateInTripRange, parseISOAsLocal, toLocalISOString } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -162,8 +162,8 @@ export default function AddFuelDrawer({ open, onOpenChange, tripId, initialData 
                                             <FormControl>
                                                 <div className="bg-white/5 border border-white/10 rounded-md p-1">
                                                     <DateTimePicker
-                                                        date={field.value ? new Date(field.value) : undefined}
-                                                        setDate={(date) => field.onChange(date ? date.toISOString() : '')}
+                                                        date={field.value ? parseISOAsLocal(field.value) : undefined}
+                                                        setDate={(date) => field.onChange(date ? toLocalISOString(date) : '')}
                                                     />
                                                 </div>
                                             </FormControl>
@@ -205,10 +205,10 @@ export default function AddFuelDrawer({ open, onOpenChange, tripId, initialData 
                                                     <div className="relative group">
                                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">R$</span>
                                                         <CurrencyInput
-                                                            placeholder="0,000"
+                                                            placeholder="0,00"
                                                             value={field.value}
                                                             onChange={field.onChange}
-                                                            decimalScale={3}
+                                                            decimalScale={2}
                                                             className="text-lg font-bold pl-9 bg-white/5 border-white/10 focus:border-primary/50 text-white h-10"
                                                         />
                                                     </div>

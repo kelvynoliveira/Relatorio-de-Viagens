@@ -19,7 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { generateId, fromInputDateTime, isDateInTripRange } from '@/lib/utils';
+import { generateId, fromInputDateTime, isDateInTripRange, parseISOAsLocal, toLocalISOString } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -201,8 +201,8 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
                                                 <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Data</FormLabel>
                                                 <FormControl>
                                                     <DateTimePicker
-                                                        date={field.value ? new Date(field.value) : undefined}
-                                                        setDate={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                                                        date={field.value ? parseISOAsLocal(field.value) : undefined}
+                                                        setDate={(date) => field.onChange(date ? toLocalISOString(date).split('T')[0] : '')}
                                                         showTime={false}
                                                     />
                                                 </FormControl>

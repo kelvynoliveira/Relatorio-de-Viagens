@@ -140,3 +140,26 @@ export function formatUserName(name?: string | null) {
   const rawName = name.split(' ')[0].split('.')[0];
   return rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
 }
+
+/**
+ * Parses an ISO string and returns a Date object shifted so that its local representation
+ * matches the UTC representation of the string. This prevents "day before" bugs in calendars.
+ */
+export function parseISOAsLocal(isoString: string | undefined | null): Date {
+  if (!isoString) return new Date();
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return new Date();
+  
+  // Shift the date so that local time matches what was stored as UTC
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() + offset);
+}
+
+/**
+ * Returns an ISO string from a Date object by shifting it so that its UTC representation
+ * matches its local representation.
+ */
+export function toLocalISOString(date: Date): string {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString();
+}
