@@ -32,9 +32,9 @@ export default function TabItinerary({ trip, readonly = false }: { trip: Trip, r
                     )}
                 </div>
             ) : (
-                <div className="relative border-l-2 border-white/5 ml-4 pl-8 space-y-8 py-4">
-                    {/* Gradient Line Glow */}
-                    <div className="absolute top-0 bottom-0 left-[-1px] w-[2px] bg-gradient-to-b from-primary/0 via-primary/30 to-primary/0" />
+                <div className="relative ml-4 pl-8 space-y-8 py-4">
+                    {/* Gradient Line Glow - More Intense */}
+                    <div className="absolute top-0 bottom-0 left-[-1px] w-[2px] bg-gradient-to-b from-primary/0 via-primary/50 to-primary/0 shadow-[0_0_15px_rgba(var(--primary),0.3)]" />
 
                     {trip.itinerary.map((item, idx) => {
                         const campus = getCampusDetails(item.campusId);
@@ -42,9 +42,12 @@ export default function TabItinerary({ trip, readonly = false }: { trip: Trip, r
 
                         return (
                             <div key={idx} className="relative group">
-                                {/* Timeline Dot */}
-                                <div className="absolute -left-[41px] top-5 w-5 h-5 rounded-full bg-black/40 border-2 border-primary/30 flex items-center justify-center shadow-[0_0_10px_rgba(var(--primary),0.2)] group-hover:border-primary/80 group-hover:shadow-[0_0_15px_rgba(var(--primary),0.5)] transition-all duration-500 z-10">
-                                    <div className="w-2 h-2 rounded-full bg-primary/70 group-hover:bg-primary transition-colors" />
+                                {/* Timeline Dot with Pulsing Glow */}
+                                <div className="absolute -left-[41px] top-5 w-5 h-5 rounded-full bg-black/60 border-2 border-primary/40 flex items-center justify-center z-10 transition-all duration-500 group-hover:border-primary group-hover:scale-110">
+                                    <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.8)] animate-pulse" />
+                                    
+                                    {/* Expansion Ring on Hover */}
+                                    <div className="absolute inset-0 rounded-full bg-primary/20 scale-150 opacity-0 group-hover:opacity-100 transition-all duration-700" />
                                 </div>
 
                                 <Card className="border border-white/5 bg-black/20 backdrop-blur-sm hover:bg-white/5 transition-all duration-500 rounded-2xl overflow-hidden group-hover:shadow-[0_0_30px_rgba(0,0,0,0.3)] group-hover:border-primary/20 hover:-translate-y-1">

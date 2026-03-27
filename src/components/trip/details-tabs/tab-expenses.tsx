@@ -2,7 +2,7 @@ import { Trip, FuelEntry, TollEntry, FoodEntry, MobilityEntry, OtherEntry, Displ
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Fuel, Coins, Utensils, Receipt, Image as ImageIcon, CarFront, Pencil, Trash2, Building2 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useTripStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -220,8 +220,16 @@ export default function TabExpenses({ trip, readonly = false }: { trip: Trip, re
                                     <div className="flex-1">
                                         {renderItemContent(item)}
                                     </div>
-                                    <div className="flex items-center gap-2 ml-4">
-                                        <div className={`font-bold text-lg text-white bg-black/30 px-3 py-1 rounded-lg border border-white/5`}>
+                                    <div className="flex items-center gap-3 ml-4">
+                                        <div className={cn(
+                                            "font-black text-lg px-4 py-1.5 rounded-2xl border backdrop-blur-md shadow-xl transition-transform group-hover:scale-105",
+                                            type === 'fuel' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20 shadow-orange-500/5' :
+                                            type === 'toll' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 shadow-yellow-500/5' :
+                                            type === 'food' ? 'bg-red-500/10 text-red-400 border-red-500/20 shadow-red-500/5' :
+                                            type === 'hotel' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/5' :
+                                            type === 'mobility' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20 shadow-sky-500/5' :
+                                            'bg-zinc-500/10 text-zinc-400 border-zinc-500/20 shadow-zinc-500/5'
+                                        )}>
                                             {formatCurrency(item.amount || item.pricePaid || item.cost || 0)}
                                         </div>
                                         {!readonly && (

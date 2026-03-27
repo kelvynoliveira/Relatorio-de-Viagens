@@ -89,6 +89,25 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Custom Scrollbar Elite */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
 }
 
 @layer utilities {
@@ -115,6 +134,18 @@
 
   .soft-shadow {
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  .glow-focus {
+    @apply transition-all duration-300;
+  }
+
+  .glow-focus:focus-within {
+    @apply ring-2 ring-primary/40 border-primary/40 shadow-[0_0_15px_rgba(var(--primary),0.2)];
+  }
+
+  .timeline-line {
+    @apply absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-primary/20 to-transparent;
   }
 }
 
