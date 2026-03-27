@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  PieChart, Pie, Sector
 } from 'recharts';
 import { Trip } from '@/lib/models';
 import { getTripExpenseData, getCategoryDistribution, getTripKmData } from '@/lib/chart-utils';
@@ -13,6 +13,15 @@ import { formatCurrency } from '@/lib/utils';
 interface DashboardChartsProps {
   trips: Trip[];
 }
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Combustível': '#10b981', // Emerald
+  'Pedágio': '#3b82f6',     // Blue
+  'Alimentação': '#fbbf24', // Amber
+  'Mobilidade': '#8b5cf6',  // Violet
+  'Hospedagem': '#ec4899',  // Pink
+  'Outros': '#94a3b8'       // Slate
+};
 
 export default function DashboardCharts({ trips }: DashboardChartsProps) {
   const tripExpenseData = useMemo(() => getTripExpenseData(trips), [trips]);
@@ -33,13 +42,14 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
         </CardHeader>
         <CardContent className="h-[300px] pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={tripExpenseData}>
+            <BarChart data={tripExpenseData} margin={{ bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
               <XAxis 
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#888', fontSize: 11 }} 
+                tick={{ fill: '#888', fontSize: 10 }} 
+                interval={0}
               />
               <YAxis 
                 axisLine={false} 
@@ -50,17 +60,18 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
               <Tooltip 
                 cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                 contentStyle={{ 
-                  backgroundColor: 'rgba(0,0,0,0.8)', 
+                  backgroundColor: 'rgba(0,0,0,0.85)', 
                   borderColor: 'rgba(255,255,255,0.1)', 
                   borderRadius: '1rem',
-                  backdropFilter: 'blur(8px)'
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.1)'
                 }}
                 itemStyle={{ color: '#fff', fontWeight: 'bold' }}
                 formatter={(value: any) => [formatCurrency(Number(value)), 'Total Gasto']}
               />
-              <Bar dataKey="amount" radius={[8, 8, 0, 0]} animationDuration={1500}>
+              <Bar dataKey="amount" radius={[6, 6, 0, 0]} maxBarSize={50} animationDuration={1500}>
                 {tripExpenseData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill="#9333ea" opacity={0.8 - (index * 0.1)} />
+                  <Cell key={`cell-${index}`} fill="#9333ea" opacity={1 - (index * 0.1)} />
                 ))}
               </Bar>
             </BarChart>
@@ -68,7 +79,7 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
         </CardContent>
       </Card>
 
-      {/* 2. Distribuição por Categoria (Radar Chart) */}
+      {/* 2. Distribuição por Categoria (Pie/Donut Chart) */}
       <Card className="glass-card border-white/5 overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
@@ -78,23 +89,29 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
         </CardHeader>
         <CardContent className="h-[300px] pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart outerRadius="80%" data={categoryData}>
-              <PolarGrid stroke="rgba(255,255,255,0.1)" />
-              <PolarAngleAxis dataKey="category" tick={{ fill: '#888', fontSize: 10 }} />
-              <PolarRadiusAxis angle={30} domain={[0, 'auto']} axisLine={false} tick={false} />
-              <Radar
-                name="Gastos"
+            <PieChart>
+              <Pie
+                data={categoryData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
                 dataKey="amount"
-                stroke="#3b82f6"
-                fill="#3b82f6"
-                fillOpacity={0.5}
+                nameKey="category"
                 animationDuration={1500}
-              />
+                label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                labelLine={false}
+              >
+                {categoryData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.category] || '#888'} />
+                ))}
+              </Pie>
               <Tooltip 
-                contentStyle={{ backgroundColor: 'black', borderRadius: '12px', border: 'none' }}
+                contentStyle={{ backgroundColor: 'rgba(0,0,0,0.9)', borderRadius: '12px', border: 'none' }}
                 formatter={(value: any) => [formatCurrency(Number(value)), 'Valor']}
               />
-            </RadarChart>
+            </PieChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
@@ -109,18 +126,18 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
         </CardHeader>
         <CardContent className="h-[250px] pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={kmData}>
+            <BarChart data={kmData} margin={{ bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 11 }} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 10 }} interval={0} />
               <YAxis axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 11 }} />
               <Tooltip 
                 cursor={{ fill: 'rgba(255,255,255,0.02)' }}
                 contentStyle={{ backgroundColor: 'black', borderRadius: '12px', border: 'none' }}
                 formatter={(value: any) => [`${value} km`, 'Distância']}
               />
-              <Bar dataKey="km" radius={[8, 8, 0, 0]} animationDuration={1000}>
+              <Bar dataKey="km" radius={[6, 6, 0, 0]} maxBarSize={60} animationDuration={1200}>
                 {kmData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill="#10b981" opacity={0.8 - (index * 0.1)} />
+                  <Cell key={`cell-${index}`} fill="#10b981" />
                 ))}
               </Bar>
             </BarChart>
