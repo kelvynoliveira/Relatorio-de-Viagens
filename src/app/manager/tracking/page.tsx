@@ -92,9 +92,11 @@ export default function ManagerTrackingPage() {
                 if (campus && visit.sessions.length > 0) {
                     // Use the latest session start time
                     const latestSession = [...visit.sessions].sort((a,b) => 
-                        new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
+                        new Date(b.startAt || 0).getTime() - new Date(a.startAt || 0).getTime()
                     )[0];
-                    events.push({ date: new Date(latestSession.startAt), location: campus.name });
+                    if (latestSession && latestSession.startAt) {
+                        events.push({ date: new Date(latestSession.startAt), location: campus.name });
+                    }
                 }
             });
 
