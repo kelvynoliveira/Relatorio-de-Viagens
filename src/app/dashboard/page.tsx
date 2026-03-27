@@ -12,6 +12,7 @@ import { formatUserName } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Skeleton, StatsSkeleton, TripCardSkeleton, ChartsSkeleton } from '@/components/ui/skeleton';
 import DashboardCharts from '@/components/dashboard/dashboard-charts';
+import ProfileCompletionAlert from '@/components/dashboard/profile-completion-alert';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -99,7 +100,8 @@ export default function DashboardPage() {
                         </Link>
                     </motion.header>
 
-                    <motion.div variants={itemVariants}>
+                    <motion.div variants={itemVariants} className="space-y-8">
+                        <ProfileCompletionAlert />
                         <DashboardStats trips={userTrips} />
                     </motion.div>
 
