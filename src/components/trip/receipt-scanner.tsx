@@ -55,7 +55,10 @@ export function ReceiptScanner({ onScanComplete, className }: ReceiptScannerProp
         body: JSON.stringify({ image: base64Content }),
       });
 
-      if (!ocrResponse.ok) throw new Error('Falha no OCR');
+      if (!ocrResponse.ok) {
+        const errorData = await ocrResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.details || 'Falha na comunicação com o servidor de OCR');
+      }
       const { text } = await ocrResponse.json();
       const parsedData = parseReceiptText(text);
 
@@ -92,7 +95,7 @@ export function ReceiptScanner({ onScanComplete, className }: ReceiptScannerProp
 
     } catch (error: any) {
       console.error('OCR/Upload Error:', error);
-      toast.error('Erro ao processar. Tente novamente.');
+      toast.error(error.message || 'Erro ao processar. Tente novamente.');
       setIsScanning(false);
       setPreviewUrl(null);
     }
