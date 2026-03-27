@@ -1,108 +1,212 @@
+export type ReceiptType = 'fuel' | 'food' | 'toll' | 'pix' | 'retail' | 'unknown';
+
 export interface ParsedReceipt {
+  type: ReceiptType;
   totalAmount?: number;
   date?: string;
   liters?: number;
   pricePerLiter?: number;
   location?: string;
+  cnpj?: string;
+  paymentMethod?: string;
 }
 
+/**
+ * Main OCR Parser with category-specific logic
+ */
 export function parseReceiptText(text: string): ParsedReceipt {
-  const result: ParsedReceipt = {};
+  const cleanText = text.toLowerCase();
+  const type = detectReceiptType(cleanText);
+
+  switch (type) {
+    case 'fuel':
+      return parseFuelReceipt(text);
+    case 'pix':
+      return parsePixReceipt(text);
+    default:
+      return parseGenericReceipt(text, type);
+  }
+}
+
+/**
+ * Detects the most likely category of the receipt
+ */
+function detectReceiptType(text: string): ReceiptType {
+  if (/gasolina|etanol|diesel|combustivel|posto|litros|volumen/i.test(text)) {
+    return 'fuel';
+  }
+  if (/pix|comprovante de pagamento|transferencia/i.test(text)) {
+    return 'pix';
+  }
+  if (/pedagio|sem parar|conectcar|veloe/i.test(text)) {
+    return 'toll';
+  }
+  if (/restaurante|lanchonete|ifood|burger|pizza|refeicao/i.test(text)) {
+    return 'food';
+  }
+  if (/nfce|nota fiscal|danfe|cupom fiscal/i.test(text)) {
+    return 'retail';
+  }
+  return 'unknown';
+}
+
+/**
+ * Dedicated parser for fuel receipts (handles liters and calculations)
+ */
+function parseFuelReceipt(text: string): ParsedReceipt {
+  const result: ParsedReceipt = { type: 'fuel' };
   const lines = text.split('\n');
 
-  // Regex patterns for Portuguese receipts
-  const dateRegex = /(\d{2})\/(\d{2})\/(\d{4}|\d{2})/g;
-  const timeRegex = /([012]\d):([0-5]\d)(?::([0-5]\d))?/g;
-  // Support: TOTAL, VALOR, VALOR A PAGAR, VALOR TOTAL, Valor: R$, etc.
-  const currencyRegex = /(?:TOTAL|VALOR|PAGAR|VLR|LIQUIDO)[\s:]*(?:R\$)?[\s]*([\d.,]+)/i;
-  const litersRegex = /(?:LITROS|QTDE|UNIT|VOL)[\s:]*([\d.,]+)/i;
-  const priceRegex = /(?:PRECO|VALOR UNIT|UNITARIO|P\.U)[\s:]*([\d.,]+)/i;
-  const excludeKeywords = ['tributos', 'aproximado', 'lei', 'fed', 'icms', 'contribuinte', 'cpf', 'cnpj'];
-
-  // 1. Initial cleanup: filter lines to find location (usually top lines)
-  const cleanLines = lines.map(l => l.trim()).filter(l => l.length > 2);
-  if (cleanLines.length > 0) {
-    // Look for lines that look like a business name (usually all caps or starting with a known prefix)
-    const potentialLocation = cleanLines.slice(0, 4).find(l => 
-        l.length > 5 && 
-        !l.includes('/') && 
-        !l.includes('CPF') && 
-        !l.includes('CNPJ') &&
-        !l.includes('VALOR') &&
-        !/^\d+$/.test(l.replace(/\s/g, ''))
-    );
-    if (potentialLocation) result.location = potentialLocation;
-  }
-
-  // 2. Data extraction from all matches
-  const textMatches = Array.from(text.matchAll(dateRegex));
-  if (textMatches.length > 0) {
-    // Prioritize the LAST date found (often the payment/closure date)
-    const lastMatch = textMatches[textMatches.length - 1];
-    let year = lastMatch[3];
-    if (year.length === 2) year = `20${year}`;
-    
-    // Find times
-    const allTimes = Array.from(text.matchAll(timeRegex));
-    let time = "12:00:00";
-    if (allTimes.length > 0) {
-        // Match time nearest to the date if possible, otherwise use last found
-        const lastTime = allTimes[allTimes.length - 1];
-        time = `${lastTime[1]}:${lastTime[2]}:${lastTime[3] || '00'}`;
-    }
-    
-    result.date = `${year}-${lastMatch[2]}-${lastMatch[1]}T${time}.000Z`;
-  }
+  // Regex specific for common fuel receipt patterns
+  const litersRegex = /(\d+[.,]\d+)\s*(l|litros|vol|volumen)/i;
+  const pricePerLiterRegex = /(r\$?\s*)?(\d+[.,]\d+)\s*(\/l|por litro|p\.u)/i;
+  const totalRegex = /(?:total|valor|pagar|vlr|liquido)[\s:r$]*([\d.,]+)/i;
 
   for (const line of lines) {
-    const lowerLine = line.toLowerCase();
+    const cleanLine = line.toLowerCase();
     
-    // Skip lines with excluded keywords to avoid picking up tax values or IDs
-    if (excludeKeywords.some(kw => lowerLine.includes(kw))) continue;
+    // Avoid picking up tax lines
+    if (/(?:tributos|lei|fed|icms|aproximado)/i.test(cleanLine)) continue;
 
-    // 2. Currency/Total Detection (Explicit Keywords)
-    if (!result.totalAmount) {
-      const totalMatch = line.match(currencyRegex);
-      if (totalMatch) {
-        const value = parseNumber(totalMatch[1]);
-        if (value > 0.1) result.totalAmount = value; // Avoid tiny values
-      }
-    }
-
-    // 3. Liters Detection (Fuel specific)
+    // 1. Liters (ex: 35,21 L)
     if (!result.liters) {
-      const litersMatch = line.match(litersRegex);
-      if (litersMatch) {
-        const value = parseNumber(litersMatch[1]);
-        if (value > 0) result.liters = value;
+      const match = line.match(litersRegex);
+      if (match) {
+        result.liters = parseNumber(match[1]);
       }
     }
 
-    // 4. Price per Liter Detection
+    // 2. Price per liter (ex: 5,49 /L)
     if (!result.pricePerLiter) {
-      const priceMatch = line.match(priceRegex);
-      if (priceMatch) {
-        const value = parseNumber(priceMatch[1]);
-        if (value > 0) result.pricePerLiter = value;
+      const match = line.match(pricePerLiterRegex);
+      if (match) {
+        // match[2] if we have a prefix, otherwise check the whole thing
+        result.pricePerLiter = parseNumber(match[2] || match[1]);
+      }
+    }
+
+    // 3. Total
+    if (!result.totalAmount) {
+      const match = line.match(totalRegex);
+      if (match) {
+        const val = parseNumber(match[1]);
+        if (val > 1) result.totalAmount = val;
       }
     }
   }
 
-  // Backup: if no total found by keyword and it's a very short receipt (like PIX)
-  // Look for any currency-like pattern at the end
-  if (!result.totalAmount) {
-    const allNumbers = text.match(/R\$[\s]*([\d.,]+)/gi) || [];
-    if (allNumbers.length > 0) {
-      const lastValue = parseNumber(allNumbers[allNumbers.length - 1].replace(/R\$/i, '').trim());
-      if (lastValue > 0) result.totalAmount = lastValue;
-    }
+  // Intelligence: calculate missing fields if possible
+  if (result.totalAmount && result.liters && !result.pricePerLiter) {
+    result.pricePerLiter = Number((result.totalAmount / result.liters).toFixed(3));
+  }
+  if (result.totalAmount && result.pricePerLiter && !result.liters) {
+    result.liters = Number((result.totalAmount / result.pricePerLiter).toFixed(2));
   }
 
+  enrichCommonData(result, text);
   return result;
 }
 
+/**
+ * Dedicated parser for PIX/Bank transfers
+ */
+function parsePixReceipt(text: string): ParsedReceipt {
+  const result: ParsedReceipt = { type: 'pix' };
+  
+  // PIX usually has the value near the end, or clearly marked with R$
+  const valueRegex = /(?:valor|vlr|liquido|r\$)[\s:]*(?:r\$)?[\s]*([\d.,]+)/gi;
+  const matches = Array.from(text.matchAll(valueRegex));
+  
+  if (matches.length > 0) {
+    // Get the highest value found (likely the total)
+    const values = matches.map(m => parseNumber(m[1])).filter(v => v > 0);
+    if (values.length > 0) {
+        result.totalAmount = Math.max(...values);
+    }
+  }
+
+  enrichCommonData(result, text);
+  return result;
+}
+
+/**
+ * Generic fallback parser
+ */
+function parseGenericReceipt(text: string, type: ReceiptType): ParsedReceipt {
+  const result: ParsedReceipt = { type };
+  const lines = text.split('\n');
+  const totalRegex = /(?:total|valor|pagar|vlr|liquido)[\s:r$]*([\d.,]+)/i;
+
+  for (const line of lines) {
+    if (/(?:tributos|lei|fed|icms|aproximado)/i.test(line.toLowerCase())) continue;
+    
+    if (!result.totalAmount) {
+      const match = line.match(totalRegex);
+      if (match) {
+        const val = parseNumber(match[1]);
+        if (val > 0.1) result.totalAmount = val;
+      }
+    }
+  }
+
+  enrichCommonData(result, text);
+  return result;
+}
+
+/**
+ * Extracts shared data like Date, Time, Location and CNPJ
+ */
+function enrichCommonData(result: ParsedReceipt, text: string) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+  
+  // 1. Location Detection (Business Name)
+  if (!result.location && lines.length > 0) {
+    const potential = lines.slice(0, 4).find(l => 
+        l.length > 5 && 
+        !l.includes('/') && 
+        !l.match(/(?:cnpj|cpf|valor|total|pagamento)/i) &&
+        !/^\d+$/.test(l.replace(/\s/g, ''))
+    );
+    if (potential) result.location = potential;
+  }
+
+  // 2. CNPJ Detection
+  const cnpjMatch = text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/);
+  if (cnpjMatch) result.cnpj = cnpjMatch[0];
+
+  // 3. Date & Time Detection (Prioritizing last match/payment date)
+  const dateRegex = /(\d{2})\/(\d{2})\/(\d{4}|\d{2})/g;
+  const timeRegex = /([012]\d):([0-5]\d)(?::([0-5]\d))?/g;
+  
+  const dateMatches = Array.from(text.matchAll(dateRegex));
+  if (dateMatches.length > 0) {
+    const lastDate = dateMatches[dateMatches.length - 1];
+    let year = lastDate[3];
+    if (year.length === 2) year = `20${year}`;
+    
+    const timeMatches = Array.from(text.matchAll(timeRegex));
+    let time = "12:00:00";
+    if (timeMatches.length > 0) {
+      const lastTime = timeMatches[timeMatches.length - 1];
+      time = `${lastTime[1]}:${lastTime[2]}:${lastTime[3] || '00'}`;
+    }
+    
+    result.date = `${year}-${lastDate[2]}-${lastDate[1]}T${time}.000Z`;
+  }
+
+  // 4. Payment Method
+  const lowerText = text.toLowerCase();
+  if (/credito/i.test(lowerText)) result.paymentMethod = 'credit';
+  else if (/debito/i.test(lowerText)) result.paymentMethod = 'debit';
+  else if (/pix/i.test(lowerText)) result.paymentMethod = 'pix';
+  else if (/dinheiro/i.test(lowerText)) result.paymentMethod = 'cash';
+}
+
+/**
+ * Utility to parse localized numbers (1.234,56 -> 1234.56)
+ */
 function parseNumber(str: string): number {
-  // Handles 1.234,56 -> 1234.56
+  if (!str) return 0;
   const clean = str.replace(/[^\d,.]/g, '').replace(/\./g, '').replace(',', '.');
   return parseFloat(clean) || 0;
 }
