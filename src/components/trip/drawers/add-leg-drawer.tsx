@@ -2,6 +2,7 @@
 
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
 import { DisplacementLeg, DisplacementLegSchema, Trip, TransportTypeEnum } from '@/lib/models';
 import { useTripStore } from '@/lib/store';
 import {
@@ -191,7 +192,7 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <FormField
                                         control={form.control}
                                         name="date"
@@ -199,13 +200,11 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
                                             <FormItem>
                                                 <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Data</FormLabel>
                                                 <FormControl>
-                                                    <div className="bg-white/5 border border-white/10 rounded-md p-1">
-                                                        <DateTimePicker
-                                                            date={field.value ? new Date(field.value) : undefined}
-                                                            setDate={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
-                                                            showTime={false}
-                                                        />
-                                                    </div>
+                                                    <DateTimePicker
+                                                        date={field.value ? new Date(field.value) : undefined}
+                                                        setDate={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                                                        showTime={false}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -218,7 +217,12 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
                                             <FormItem>
                                                 <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Horário</FormLabel>
                                                 <FormControl>
-                                                    <Input type="time" {...field} value={field.value ?? ''} className="bg-white/5 border-white/10 focus:border-primary/50 text-white h-10" />
+                                                    <DateTimePicker
+                                                        date={field.value ? new Date(`2000-01-01T${field.value}`) : undefined}
+                                                        setDate={(date) => field.onChange(date ? format(date, 'HH:mm') : '')}
+                                                        showCalendar={false}
+                                                        showTime={true}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

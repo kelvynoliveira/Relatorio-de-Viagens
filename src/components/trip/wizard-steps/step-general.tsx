@@ -10,6 +10,7 @@ import { Trip } from '@/lib/models';
 import { generateId } from '@/lib/utils';
 import { Plane, Plus, Trash2 } from 'lucide-react';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { format } from 'date-fns';
 
 export default function StepGeneral() {
     const { control } = useFormContext<Trip>();
@@ -223,7 +224,12 @@ export default function StepGeneral() {
                                             <FormItem>
                                                 <FormLabel className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">Horário do Voo</FormLabel>
                                                 <FormControl>
-                                                    <Input type="time" {...field} value={field.value ?? ''} className="h-9 bg-white/5 border-white/10 focus:border-primary/50 focus:bg-white/10 transition-all font-mono" />
+                                                    <DateTimePicker
+                                                        date={field.value ? new Date(`2000-01-01T${field.value}`) : undefined}
+                                                        setDate={(date) => field.onChange(date ? format(date, 'HH:mm') : '')}
+                                                        showCalendar={false}
+                                                        showTime={true}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

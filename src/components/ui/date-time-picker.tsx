@@ -22,9 +22,10 @@ interface DateTimePickerProps {
     setDate: (date: Date | undefined) => void
     disabled?: boolean
     showTime?: boolean
+    showCalendar?: boolean
 }
 
-export function DateTimePicker({ date, setDate, disabled, showTime = true }: DateTimePickerProps) {
+export function DateTimePicker({ date, setDate, disabled, showTime = true, showCalendar = true }: DateTimePickerProps) {
     const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(date)
 
     React.useEffect(() => {
@@ -47,10 +48,7 @@ export function DateTimePicker({ date, setDate, disabled, showTime = true }: Dat
             newDate.setHours(now.getHours())
             newDate.setMinutes(now.getMinutes())
         } else {
-            // If time is disabled, standardizing to noon or start of day might be safer, 
-            // but keeping local time is usually fine for display. 
-            // Let's keep 00:00:00 for strict date only or preserve generic behavior.
-            newDate.setHours(12, 0, 0, 0); // Noon to avoid timezone edge cases on simple date
+            newDate.setHours(12, 0, 0, 0);
         }
         setSelectedDate(newDate)
         setDate(newDate)
@@ -68,26 +66,36 @@ export function DateTimePicker({ date, setDate, disabled, showTime = true }: Dat
                     )}
                     disabled={disabled}
                 >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {showCalendar ? <CalendarIcon className="mr-2 h-4 w-4" /> : <Clock className="mr-2 h-4 w-4" />}
                     {date && isValid(date) ? (
                         <span className="capitalize">
-                            {format(date, showTime ? "PPP 'às' HH:mm" : "PPP", { locale: ptBR })}
+                            {showCalendar 
+                                ? format(date, showTime ? "PPP 'às' HH:mm" : "PPP", { locale: ptBR })
+                                : format(date, "HH:mm")
+                            }
                         </span>
                     ) : (
-                        <span>{showTime ? "Selecione data e hora..." : "Selecione uma data..."}</span>
+                        <span>
+                            {showCalendar 
+                                ? (showTime ? "Selecione data e hora..." : "Selecione uma data...")
+                                : "Selecione o horário..."
+                            }
+                        </span>
                     )}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start" side="bottom" sideOffset={4} avoidCollisions={false}>
-                <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateSelect}
-                    initialFocus
-                    locale={ptBR}
-                />
+                {showCalendar && (
+                    <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        initialFocus
+                        locale={ptBR}
+                    />
+                )}
                 {showTime && (
-                    <div className="p-3 border-t border-border bg-muted/20">
+                    <div className={cn("p-3 bg-muted/20", showCalendar && "border-t border-border")}>
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-muted-foreground" />
@@ -96,7 +104,7 @@ export function DateTimePicker({ date, setDate, disabled, showTime = true }: Dat
                                     {selectedDate ? format(selectedDate, "HH:mm") : "--:--"}
                                 </span>
                             </div>
-                            <div className="flex h-[150px] w-full gap-2">
+                            <div className="flex h-[150px] w-[200px] gap-2 mx-auto">
                                 <div className="flex-1 flex flex-col gap-1 items-center">
                                     <span className="text-[10px] text-muted-foreground uppercase font-medium">Hora</span>
                                     <ScrollArea className="h-full w-full border rounded-md bg-background">
