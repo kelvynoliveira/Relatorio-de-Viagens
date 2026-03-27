@@ -102,14 +102,14 @@ export default function TabReport({ trip }: { trip: Trip }) {
                 </Card>
 
                 <Card className="bg-background/40 backdrop-blur-md border-white/10 shadow-sm relative overflow-hidden group md:col-span-2">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <CardHeader className="p-5 pb-2">
+                        <CardTitle className="text-xs font-black text-muted-foreground flex items-center gap-2 uppercase tracking-widest">
                             <Receipt className="w-4 h-4 text-primary" /> Custo Total (Selecionado)
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <div className="text-3xl font-bold text-primary">{formatCurrency(totalExpenses)}</div>
+                    <CardContent className="p-5 pt-0">
+                        <div className="text-4xl font-black text-primary tracking-tighter">{formatCurrency(totalExpenses)}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -121,69 +121,71 @@ export default function TabReport({ trip }: { trip: Trip }) {
                     <CardDescription>Cronograma da jornada</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-                        <div className="flex justify-between items-center w-full px-4 py-12">
+                    <div className="relative pt-4 pl-4 space-y-0">
+                        {/* Vertical Connector Line */}
+                        <div className="absolute left-[31px] top-8 bottom-8 w-1 bg-gradient-to-b from-emerald-500/50 via-amber-500/30 to-white/30 z-0 rounded-full" />
 
-                            {/* Origin Node */}
-                            <div className="relative flex flex-col items-center flex-1 min-w-[100px] max-w-[200px] group">
-                                <div className="absolute top-1/2 left-1/2 w-1/2 h-0.5 bg-white/10 -translate-y-1/2 z-0" />
-                                <div className="relative z-10 w-4 h-4 rounded-full bg-emerald-500 mb-0 shadow-[0_0_15px_rgba(16,185,129,0.5)] ring-4 ring-black/40" />
-                                <div className="absolute -top-12 flex flex-col items-center w-full px-1">
-                                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Início</span>
-                                    <span className="font-bold text-white text-lg w-full text-center truncate" title={trip.originCity}>
-                                        {trip.originCity}
-                                    </span>
+                        {/* Origin Node */}
+                        <div className="relative flex items-start gap-6 pb-12 group">
+                            <div className="relative z-10 w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] ring-4 ring-black/40 shrink-0">
+                                <MapPin className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex flex-col pt-1">
+                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-1">Ponto de Partida</span>
+                                <h4 className="text-xl font-bold text-white tracking-tight">{trip.originCity}</h4>
+                                <span className="text-sm font-mono text-muted-foreground mt-1">
+                                    {trip.startDate ? format(new Date(trip.startDate), 'EEEE, dd/MM', { locale: ptBR || pt }) : ''}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Legs Nodes */}
+                        {[...trip.legs].sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime()).map((leg, i) => (
+                            <div key={leg.id} className="relative flex items-start gap-6 pb-12 group">
+                                <div className={cn(
+                                    "relative z-10 w-10 h-10 rounded-2xl flex items-center justify-center border border-white/10 shadow-xl transition-all group-hover:scale-110 bg-black/60 backdrop-blur-sm shrink-0",
+                                    leg.transportType === 'airplane' ? "text-sky-400 border-sky-500/20 shadow-sky-500/10" :
+                                    leg.transportType === 'car' ? "text-amber-500 border-amber-500/20 shadow-amber-500/10" :
+                                    leg.transportType === 'bus' ? "text-blue-400 border-blue-500/20 shadow-blue-500/10" : "text-zinc-400"
+                                )}>
+                                    {leg.transportType === 'airplane' ? <Plane className="w-5 h-5" /> :
+                                     leg.transportType === 'car' ? <CarFront className="w-5 h-5" /> :
+                                     leg.transportType === 'bus' ? <Bus className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
                                 </div>
-                                <div className="absolute top-10 w-full text-center">
-                                    <span className="text-xs font-mono text-muted-foreground">{trip.startDate ? format(new Date(trip.startDate), 'dd/MM', { locale: ptBR || pt }) : ''}</span>
+                                <div className="flex flex-col pt-1">
+                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">
+                                        {leg.transportType === 'airplane' ? 'Voo' : leg.transportType === 'car' ? 'Trânsito Via Carro' : 'Deslocamento'}
+                                    </span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-lg font-bold text-white/70">{leg.from}</span>
+                                        <ArrowRight className="w-4 h-4 text-white/20" />
+                                        <span className="text-lg font-bold text-white">{leg.to}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4 mt-1">
+                                        <span className="text-sm font-mono text-muted-foreground">
+                                            {leg.date ? format(new Date(leg.date), 'dd/MM HH:mm', { locale: ptBR || pt }) : '-'}
+                                        </span>
+                                        {leg.distanceKm && (
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-muted-foreground">
+                                                {formatDistance(leg.distanceKm)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+                        ))}
 
-                            {/* Legs Nodes */}
-                            {[...trip.legs].sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime()).map((leg, i) => (
-                                <div key={leg.id} className="relative flex flex-col items-center flex-1 min-w-[120px] max-w-[240px] group">
-                                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/10 -translate-y-1/2 z-0" />
-                                    <div className={cn(
-                                        "relative z-10 w-12 h-12 rounded-xl flex items-center justify-center border border-white/10 shadow-lg transition-all group-hover:scale-110 group-hover:border-white/30 bg-black/40 backdrop-blur-sm",
-                                        leg.transportType === 'airplane' ? "text-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.2)]" :
-                                            leg.transportType === 'car' ? "text-orange-400 shadow-[0_0_15px_rgba(251,146,60,0.2)]" :
-                                                leg.transportType === 'bus' ? "text-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.2)]" : "text-gray-400"
-                                    )}>
-                                        {leg.transportType === 'airplane' ? <Plane className="w-5 h-5" /> :
-                                            leg.transportType === 'car' ? <CarFront className="w-5 h-5" /> :
-                                                leg.transportType === 'bus' ? <Bus className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
-                                    </div>
-                                    <div className="absolute -top-14 flex flex-col items-center w-full px-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-                                            {leg.transportType === 'airplane' ? 'Voo' : leg.transportType === 'car' ? 'Carro' : 'Deslocamento'}
-                                        </span>
-                                        <div className="flex items-center justify-center gap-2 text-sm font-medium text-white w-full">
-                                            <span className="opacity-70 truncate max-w-[80px]" title={leg.from}>
-                                                {leg.from.length > 12 ? leg.from.slice(0, 12) + '...' : leg.from}
-                                            </span>
-                                            <ArrowRight className="w-3 h-3 text-white/30 shrink-0" />
-                                            <span className="truncate max-w-[80px]" title={leg.to}>
-                                                {leg.to.length > 12 ? leg.to.slice(0, 12) + '...' : leg.to}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="absolute top-16 w-full text-center">
-                                        <span className="text-xs font-mono text-muted-foreground">{leg.date ? format(new Date(leg.date), 'dd/MM HH:mm', { locale: ptBR || pt }) : '-'}</span>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* Destination / End Node */}
-                            <div className="relative flex flex-col items-center flex-1 min-w-[100px] max-w-[200px] group">
-                                <div className="absolute top-1/2 left-0 w-1/2 h-0.5 bg-gradient-to-l from-white/50 to-white/10 -translate-y-1/2 z-0" />
-                                <div className="relative z-10 w-4 h-4 rounded-full bg-white mb-0 shadow-[0_0_15px_rgba(255,255,255,0.5)] ring-4 ring-black/40" />
-                                <div className="absolute -top-12 flex flex-col items-center w-full px-1">
-                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fim</span>
-                                    <span className="font-bold text-white text-lg">Conclusão</span>
-                                </div>
-                                <div className="absolute top-10 w-full text-center">
-                                    <span className="text-xs font-mono text-muted-foreground">{trip.endDate ? format(new Date(trip.endDate), 'dd/MM', { locale: ptBR || pt }) : ''}</span>
-                                </div>
+                        {/* Destination / End Node */}
+                        <div className="relative flex items-start gap-6 group">
+                            <div className="relative z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.4)] ring-4 ring-black/40 shrink-0">
+                                <CheckCircle2 className="w-5 h-5 text-black" />
+                            </div>
+                            <div className="flex flex-col pt-1">
+                                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">Conclusão</span>
+                                <h4 className="text-xl font-bold text-white tracking-tight">Viagem Finalizada</h4>
+                                <span className="text-sm font-mono text-muted-foreground mt-1">
+                                    {trip.endDate ? format(new Date(trip.endDate), 'EEEE, dd/MM', { locale: ptBR || pt }) : ''}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -207,7 +209,7 @@ export default function TabReport({ trip }: { trip: Trip }) {
                         <TableBody>
                             {reportOptions.fuel && totalFuel > 0 && (
                                 <TableRow className="border-white/5 hover:bg-white/5">
-                                    <TableCell className="font-medium flex items-center gap-2"><Fuel className="w-4 h-4 text-orange-500" /> Combustível</TableCell>
+                                    <TableCell className="font-medium flex items-center gap-2"><Fuel className="w-4 h-4 text-amber-500" /> Combustível</TableCell>
                                     <TableCell className="text-right font-mono">{formatCurrency(totalFuel)}</TableCell>
                                 </TableRow>
                             )}
@@ -510,7 +512,7 @@ export default function TabReport({ trip }: { trip: Trip }) {
                             <div className={cn(
                                 "flex items-center justify-center w-8 h-8 rounded-full border bg-white mb-2 shadow-sm z-10 shrink-0",
                                 leg.transportType === 'airplane' ? "border-sky-200 text-sky-600" :
-                                    leg.transportType === 'car' ? "border-orange-200 text-orange-600" :
+                                    leg.transportType === 'car' ? "border-amber-200 text-amber-600" :
                                         "border-gray-200 text-gray-600"
                             )}>
                                 {leg.transportType === 'airplane' ? <Plane className="w-4 h-4" /> :
