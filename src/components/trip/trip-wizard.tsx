@@ -70,12 +70,36 @@ export default function TripWizard({ initialTrip }: { initialTrip?: Trip }) {
         }
     }, [initialTrip, setValue]);
 
+    // Keep visits in sync with itinerary to avoid validation issues
+    const currentItinerary = form.watch('itinerary');
+    useEffect(() => {
+        const currentVisits = form.getValues('visits') || [];
+        const newVisits = currentItinerary.map(item => {
+            const existing = currentVisits.find(v => v.campusId === item.campusId);
+            if (existing) return existing;
+            return {
+                id: generateId(),
+                campusId: item.campusId,
+                status: 'pending' as const,
+                sessions: [],
+                scope: [],
+                photos: [],
+                notes: ''
+            };
+        });
+        
+        // Only update if lengths differ or items changed to avoid loops
+        if (JSON.stringify(newVisits.map(v => v.campusId)) !== JSON.stringify(currentVisits.map(v => v.campusId))) {
+            setValue('visits', newVisits, { shouldValidate: true });
+        }
+    }, [currentItinerary, setValue, form]);
+
     const handleNext = async () => {
         console.log('[TripWizard] handleNext clicked. Current Step:', currentStep);
         let isValid = false;
 
         if (currentStep === 1) {
-            isValid = await trigger(['title', 'originCity', 'startDate', 'endDate']);
+            isValid = await trigger(['title', 'originCity', 'startDate', 'endDate', 'plannedFlights']);
         } else if (currentStep === 2) {
             const itinerary = form.getValues('itinerary');
             if (itinerary.length === 0) {
@@ -218,12 +242,9 @@ export default function TripWizard({ initialTrip }: { initialTrip?: Trip }) {
 
                 <FormProvider {...form}>
                     <form onSubmit={handleSubmit(onSubmit, (errors) => {
-                        console.error('Form Validation Errors:', JSON.stringify(errors, null, 2));
-                        console.log('Current Values:', form.getValues());
-                        toast.error('Erro de validação! Verifique os campos.');
+                        console.error('Form Validation Errors:', errors);
+                        toast.error('Erro de validação! Verifique os campos obrigatórios.');
                     })}>
-                        {/* Header Removed - Integrated into Top Bar */}
-
                         <CardContent className="min-h-[300px] p-6">
                             <AnimatePresence mode="wait">
                                 <motion.div
