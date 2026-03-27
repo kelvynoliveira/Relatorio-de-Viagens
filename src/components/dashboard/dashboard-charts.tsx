@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie, Sector
+  PieChart, Pie, Sector, Legend
 } from 'recharts';
 import { Trip } from '@/lib/models';
 import { getTripExpenseData, getCategoryDistribution, getTripKmData } from '@/lib/chart-utils';
@@ -93,14 +93,13 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
               <Pie
                 data={categoryData}
                 cx="50%"
-                cy="50%"
+                cy={100}
                 innerRadius={60}
                 outerRadius={80}
                 paddingAngle={5}
                 dataKey="amount"
                 nameKey="category"
                 animationDuration={1500}
-                label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
                 labelLine={false}
               >
                 {categoryData.map((entry, index) => (
@@ -108,8 +107,26 @@ export default function DashboardCharts({ trips }: DashboardChartsProps) {
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(0,0,0,0.9)', borderRadius: '12px', border: 'none' }}
+                contentStyle={{ 
+                  backgroundColor: 'rgba(0,0,0,0.9)', 
+                  borderRadius: '12px', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(10px)'
+                }}
                 formatter={(value: any) => [formatCurrency(Number(value)), 'Valor']}
+              />
+              <Legend 
+                verticalAlign="bottom" 
+                align="center"
+                layout="horizontal"
+                iconType="circle"
+                wrapperStyle={{ paddingTop: '20px' }}
+                formatter={(value, entry: any) => {
+                  const payload = entry.payload;
+                  const total = categoryData.reduce((a, b) => a + b.amount, 0);
+                  const percentage = ((payload.amount / total) * 100).toFixed(0);
+                  return <span className="text-[10px] font-bold text-white/60 ml-1">{value} ({percentage}%)</span>;
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
