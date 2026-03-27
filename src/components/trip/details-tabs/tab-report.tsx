@@ -144,7 +144,8 @@ export default function TabReport({ trip }: { trip: Trip }) {
                             const getItemTimestamp = (item: any) => {
                                 if (!item.date) return 0;
                                 let dateStr = item.date;
-                                const time = item.type === 'flight' ? item.flightTime : (item.type === 'leg' ? item.time : null);
+                                const anyItem = item as any;
+                                const time = item.type === 'flight' ? anyItem.flightTime : (item.type === 'leg' ? anyItem.time : null);
                                 if (time) {
                                     dateStr = `${item.date.split('T')[0]}T${time}`;
                                 } else if (item.date.length === 10) {
@@ -532,49 +533,79 @@ export default function TabReport({ trip }: { trip: Trip }) {
                                 {trip.startDate ? format(new Date(trip.startDate), 'dd/MM', { locale: ptBR || pt }) : '-'}
                             </span>
                         </div>
-                        {/* Connector Line (Right) - Adjusted top to 16px (center of 32px height) */}
+                        {/* Connector Line (Right) */}
                         <div className="absolute top-4 left-1/2 w-full h-[2px] bg-gray-200 -z-0" />
                     </div>
 
-                    {[...trip.legs].sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime()).map((leg, i) => (
-                        <div key={leg.id} className="flex flex-col items-center w-[140px] mb-6 px-1 relative">
-                            {/* Connector Line (Left & Right) - Adjusted top to 16px, height to 2px for better visibility */}
-                            <div className="absolute top-4 left-0 w-full h-[2px] bg-gray-200 -z-0" />
+                    {(() => {
+                        const getItemTimestampForPrint = (item: any) => {
+                            if (!item.date) return 0;
+                            let dateStr = item.date;
+                            const anyItem = item as any;
+                            const time = item.type === 'flight' ? anyItem.flightTime : (item.type === 'leg' ? anyItem.time : null);
+                            if (time) {
+                                dateStr = `${item.date.split('T')[0]}T${time}`;
+                            } else if (item.date.length === 10) {
+                                dateStr = `${item.date}T00:00:00`;
+                            }
+                            return new Date(dateStr).getTime();
+                        };
 
-                            <div className={cn(
-                                "flex items-center justify-center w-8 h-8 rounded-full border bg-white mb-2 shadow-sm z-10 shrink-0",
-                                leg.transportType === 'airplane' ? "border-sky-200 text-sky-600" :
-                                    leg.transportType === 'car' ? "border-amber-200 text-amber-600" :
-                                        "border-gray-200 text-gray-600"
-                            )}>
-                                {leg.transportType === 'airplane' ? <Plane className="w-4 h-4" /> :
-                                    leg.transportType === 'car' ? <CarFront className="w-4 h-4" /> :
-                                        leg.transportType === 'bus' ? <Bus className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                            </div>
+                        const allLogistics = [
+                            ...trip.legs.map(l => ({ ...l, type: 'leg' as const })),
+                            ...trip.plannedFlights.map(f => ({ ...f, type: 'flight' as const }))
+                        ].sort((a, b) => getItemTimestampForPrint(a) - getItemTimestampForPrint(b));
 
-                            <div className="text-center w-full">
-                                <span className="block text-[10px] font-bold uppercase text-gray-400 mb-0.5">
-                                    {leg.transportType === 'airplane' ? 'Voo' : leg.transportType === 'car' ? 'Carro' : 'Deslocamento'}
-                                </span>
-                                <div className="flex items-center justify-center gap-1 text-sm font-bold leading-tight mb-1 w-full px-1">
-                                    <span className="text-gray-600 truncate max-w-[50px]" title={leg.from}>
-                                        {leg.from.length > 8 ? leg.from.slice(0, 8) + '...' : leg.from}
-                                    </span>
-                                    <ArrowRight className="w-3 h-3 text-gray-300 shrink-0" />
-                                    <span className="truncate max-w-[50px]" title={leg.to}>
-                                        {leg.to.length > 8 ? leg.to.slice(0, 8) + '...' : leg.to}
-                                    </span>
+                        return allLogistics.map((item, i) => {
+                            const isFlight = item.type === 'flight';
+                            const anyItem = item as any;
+                            const transportType = isFlight ? 'airplane' : anyItem.transportType;
+                            const from = anyItem.from;
+                            const to = anyItem.to;
+                            const time = isFlight ? anyItem.flightTime : anyItem.time;
+
+                            return (
+                                <div key={anyItem.id} className="flex flex-col items-center w-[140px] mb-6 px-1 relative">
+                                    {/* Connector Line */}
+                                    <div className="absolute top-4 left-0 w-full h-[2px] bg-gray-200 -z-0" />
+
+                                    <div className={cn(
+                                        "flex items-center justify-center w-8 h-8 rounded-full border bg-white mb-2 shadow-sm z-10 shrink-0",
+                                        isFlight ? "border-sky-300 bg-sky-50 text-sky-600 ring-2 ring-sky-100" :
+                                            anyItem.transportType === 'car' ? "border-amber-200 text-amber-600" :
+                                                "border-gray-200 text-gray-600"
+                                    )}>
+                                        {isFlight ? <Plane className="w-4 h-4" /> :
+                                            anyItem.transportType === 'car' ? <CarFront className="w-4 h-4" /> :
+                                                anyItem.transportType === 'bus' ? <Bus className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                                    </div>
+
+                                    <div className="text-center w-full">
+                                        <span className="block text-[10px] font-bold uppercase text-gray-400 mb-0.5">
+                                            {isFlight ? `Voo ${anyItem.flightNumber || ''}` : (anyItem.transportType === 'car' ? 'Carro' : 'Desloc.')}
+                                        </span>
+                                        <div className="flex items-center justify-center gap-1 text-sm font-bold leading-tight mb-1 w-full px-1">
+                                            <span className="text-gray-600 truncate max-w-[50px]">
+                                                {from.length > 8 ? from.slice(0, 8) + '...' : from}
+                                            </span>
+                                            <ArrowRight className="w-3 h-3 text-gray-300 shrink-0" />
+                                            <span className="truncate max-w-[50px]">
+                                                {to.length > 8 ? to.slice(0, 8) + '...' : to}
+                                            </span>
+                                        </div>
+                                        <span className="block text-[10px] font-mono text-gray-500 font-bold">
+                                            {item.date ? format(new Date(item.date), 'dd/MM', { locale: ptBR }) : ''}
+                                            {time ? ` às ${time}` : ''}
+                                        </span>
+                                    </div>
                                 </div>
-                                <span className="block text-[10px] font-mono text-gray-400">
-                                    {leg.date ? format(new Date(leg.date), 'dd/MM HH:mm', { locale: ptBR || pt }) : '-'}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
+                            );
+                        });
+                    })()}
 
                     {/* Destination */}
                     <div className="flex flex-col items-center w-[120px] mb-6 px-1 relative">
-                        {/* Connector Line (Left) - Adjusted top to 16px */}
+                        {/* Connector Line (Left) */}
                         <div className="absolute top-4 left-0 w-1/2 h-[2px] bg-gray-200 -z-0" />
 
                         <div className="relative flex items-center justify-center w-8 h-8 rounded-full border-2 border-black bg-white text-black mb-2 shadow-sm z-10 shrink-0">
@@ -720,15 +751,22 @@ export default function TabReport({ trip }: { trip: Trip }) {
                                 <tr key={e.id} className="border-b">
                                     <td className="p-2">{e.date ? format(new Date(e.date), 'dd/MM/yyyy') : '-'}</td>
                                     <td className="p-2 font-medium">
-                                        Mobilidade (Leg - {
-                                            e.transportType === 'airplane' ? 'Voo' :
-                                                e.transportType === 'car' ? 'Carro' :
-                                                    e.transportType === 'uber' ? 'Uber/Táxi' :
-                                                        e.transportType === 'bus' ? 'Ônibus' : 'Outro'
+                                        Mobilidade (Trajeto - {
+                                            e.transportType === 'car' ? 'Carro' :
+                                                e.transportType === 'uber' ? 'Uber/Táxi' :
+                                                    e.transportType === 'bus' ? 'Ônibus' : 'Outro'
                                         })
                                     </td>
                                     <td className="p-2">{e.from} ➔ {e.to}</td>
                                     <td className="p-2 text-right">{formatCurrency(e.cost || 0)}</td>
+                                </tr>
+                            ))}
+                            {reportOptions.flights && (trip.plannedFlights || []).filter(f => (f.price || 0) > 0).map(e => (
+                                <tr key={e.id} className="border-b">
+                                    <td className="p-2">{e.date ? format(new Date(e.date), 'dd/MM/yyyy') : '-'}</td>
+                                    <td className="p-2 font-medium">Passagem Aérea ({e.flightNumber})</td>
+                                    <td className="p-2">{e.from} ➔ {e.to}</td>
+                                    <td className="p-2 text-right">{formatCurrency(e.price || 0)}</td>
                                 </tr>
                             ))}
                         </tbody>
