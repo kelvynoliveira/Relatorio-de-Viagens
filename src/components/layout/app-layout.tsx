@@ -62,17 +62,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => mobile && setIsOpen(false)}
             >
                 <motion.div
-                    whileHover={{ x: 5 }}
+                    whileHover={{ x: 5, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium",
+                        "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-sm font-bold tracking-tight relative overflow-hidden group",
                         isActive
-                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                            : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                            ? "text-primary shadow-[0_0_20px_rgba(var(--primary),0.1)]"
+                            : "text-muted-foreground/60 hover:text-white"
                     )}
                 >
-                    <item.icon className={cn("w-4 h-4", isActive ? "" : "group-hover:text-primary")} />
-                    {item.label}
+                    {isActive && (
+                        <motion.div 
+                            layoutId="activeNav"
+                            className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent border-l-4 border-primary z-0"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                        />
+                    )}
+                    <item.icon className={cn("w-5 h-5 relative z-10", isActive ? "text-primary" : "group-hover:text-white")} />
+                    <span className="relative z-10">{item.label}</span>
                 </motion.div>
             </Link>
         );
@@ -115,30 +124,38 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     ))}
                 </nav>
 
-                <div className="p-4 m-4 rounded-2xl bg-muted/30 border border-white/10 space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                        <div className="flex items-center gap-3">
+                <div className="p-4 mt-auto border-t border-white/5 bg-black/20 backdrop-blur-3xl">
+                    <div className="p-4 rounded-[2rem] bg-white/5 border border-white/5 space-y-4 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all" />
+                        
+                        <div className="flex items-center gap-4 relative z-10">
                             <ProfileSettingsDialog>
-                                <Avatar className="w-10 h-10 cursor-pointer border-2 border-primary/20 hover:border-primary transition-all shadow-md">
-                                    <AvatarImage src={user?.avatar_url} className="object-cover" />
-                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{user?.name?.substring(0, 2).toUpperCase() || 'US'}</AvatarFallback>
-                                </Avatar>
+                                <div className="relative group/avatar">
+                                    <Avatar className="w-12 h-12 cursor-pointer border-2 border-white/10 group-hover/avatar:border-primary transition-all shadow-2xl">
+                                        <AvatarImage src={user?.avatar_url} className="object-cover" />
+                                        <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white font-black">
+                                            {user?.name?.substring(0, 2).toUpperCase() || 'US'}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-[#0a0a0b] rounded-full" />
+                                </div>
                             </ProfileSettingsDialog>
-                            <div className="text-xs">
-                                <p className="font-bold truncate max-w-[120px]">{formatUserName(user?.name)}</p>
-                                <p className="text-muted-foreground truncate max-w-[120px] text-[10px] uppercase tracking-tighter">{user?.role || 'Viajante'}</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-black text-white text-sm truncate leading-none mb-1">{formatUserName(user?.name)}</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">{user?.role || 'Viajante'}</p>
                             </div>
                         </div>
+
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full justify-start text-white/40 hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all group/logout relative z-10 px-3" 
+                            onClick={handleLogout}
+                        >
+                            <LogOut className="w-4 h-4 mr-3 group-hover/logout:scale-110 transition-transform" />
+                            <span className="font-bold text-xs uppercase tracking-widest">Sair da Conta</span>
+                        </Button>
                     </div>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all" 
-                        onClick={handleLogout}
-                    >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        <span className="font-medium">Sair</span>
-                    </Button>
                 </div>
             </motion.aside>
 
