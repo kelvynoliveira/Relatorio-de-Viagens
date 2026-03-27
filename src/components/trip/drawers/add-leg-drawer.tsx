@@ -55,8 +55,18 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
     useEffect(() => {
         if (open) {
             if (initialData) {
-                form.reset(initialData);
+                // Split stored ISO date into date and time parts for the form
+                const dt = initialData.date ? new Date(initialData.date) : new Date();
+                const datePart = toLocalISOString(dt).split('T')[0];
+                const timePart = format(dt, 'HH:mm');
+                
+                form.reset({
+                    ...initialData,
+                    date: datePart,
+                    time: timePart
+                });
             } else {
+                const now = new Date();
                 form.reset({
                     id: generateId(),
                     transportType: 'car',
@@ -64,7 +74,8 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
                     to: '',
                     distanceKm: 0,
                     cost: 0,
-                    date: new Date().toISOString(),
+                    date: toLocalISOString(now).split('T')[0],
+                    time: format(now, 'HH:mm'),
                     description: '',
                     photos: []
                 });
@@ -78,8 +89,12 @@ export default function AddLegDrawer({ open, onOpenChange, tripId, initialData }
 
         setIsSubmitting(true);
 
-        // Ensure date is stored as UTC
-        if (data.date) {
+        // Combine date and time into a single ISO string
+        if (data.date && data.time) {
+            const combinedString = `${data.date}T${data.time}:00`;
+            data.date = fromInputDateTime(combinedString);
+        } else if (data.date) {
+            // Fallback for just date
             data.date = fromInputDateTime(data.date);
         }
 

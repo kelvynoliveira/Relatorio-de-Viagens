@@ -47,6 +47,7 @@ export default function AddMobilityDrawer({ open, onOpenChange, tripId, initialD
 
     useEffect(() => {
         if (open) {
+            const now = new Date();
             if (initialData) {
                 form.reset(initialData);
             } else {
@@ -57,7 +58,7 @@ export default function AddMobilityDrawer({ open, onOpenChange, tripId, initialD
                     to: '',
                     location: '',
                     description: '',
-                    date: new Date().toISOString(),
+                    date: toLocalISOString(now),
                     transportType: 'uber',
                     photos: []
                 });
