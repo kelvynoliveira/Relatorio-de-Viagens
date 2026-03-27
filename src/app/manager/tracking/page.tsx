@@ -35,8 +35,7 @@ export default function ManagerTrackingPage() {
             try {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('*')
-                    .eq('role', 'user');
+                    .select('*');
 
                 if (error) throw error;
 
@@ -45,7 +44,8 @@ export default function ManagerTrackingPage() {
                     name: p.name || 'Sem Nome',
                     email: p.email,
                     role: p.role,
-                    avatar_url: p.avatar_url
+                    avatar_url: p.avatar_url,
+                    home_city: p.home_city || 'Recife'
                 })));
             } catch (error) {
                 console.error('Error fetching profiles:', error);
@@ -110,12 +110,18 @@ export default function ManagerTrackingPage() {
 
             return { city: activeTrip.originCity, status: 'Em Viagem', tripName: activeTrip.title };
         }
-        return { city: 'Base', status: 'Disponível', tripName: '-' };
+
+        // Use the technician's home city instead of a hardcoded "Base"
+        const techId = techTrips[0]?.userId || (techTrips as any)._techId; 
+        const tech = technicians.find(t => t.id === techId);
+        return { city: tech?.home_city || 'Recife', status: 'Disponível', tripName: '-' };
     };
 
     const techLocations = useMemo(() => {
         return technicians.map(tech => {
             const techTrips = getTechTrips(tech.id);
+            // Pass tech ID context if needed
+            (techTrips as any)._techId = tech.id;
             const location = getLastLocation(techTrips);
             return {
                 tech,

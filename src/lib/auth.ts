@@ -11,6 +11,7 @@ export interface User {
     role: UserRole;
     avatar_url?: string;
     signature_url?: string;
+    home_city?: string;
 }
 
 export const login = async (email: string, password: string): Promise<{ error: string | null }> => {
@@ -50,7 +51,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
     // Fetch profile for role
     const { data: profile } = await supabase
         .from('profiles')
-        .select('role, name, avatar_url, signature_url')
+        .select('role, name, avatar_url, signature_url, home_city')
         .eq('id', user.id) // Corrected: primary key in profiles is 'id' which matches auth.users.id
         .single();
 
@@ -60,6 +61,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
         name: profile?.name || user.user_metadata?.full_name || user.user_metadata?.name || 'Usuário',
         role: profile?.role || 'user',
         avatar_url: profile?.avatar_url,
-        signature_url: profile?.signature_url
+        signature_url: profile?.signature_url,
+        home_city: profile?.home_city
     };
 };

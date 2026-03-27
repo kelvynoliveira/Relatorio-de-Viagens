@@ -30,6 +30,8 @@ export function ProfileSettingsDialog({ children }: ProfileSettingsDialogProps) 
     const [file, setFile] = useState<File | null>(null);
     const [activeTab, setActiveTab] = useState<string>('profile');
     const [isSavingSignature, setIsSavingSignature] = useState(false);
+    const [homeCity, setHomeCity] = useState(user?.home_city || 'Recife');
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) {
@@ -65,14 +67,17 @@ export function ProfileSettingsDialog({ children }: ProfileSettingsDialogProps) 
             // 3. Update Profile Logic
             const { error: updateError } = await supabase
                 .from('profiles')
-                .update({ avatar_url: publicUrl })
+                .update({ 
+                    avatar_url: publicUrl,
+                    home_city: homeCity 
+                })
                 .eq('id', user.id);
 
             if (updateError) throw updateError;
 
             // 4. Update Local State
-            setUser({ ...user, avatar_url: publicUrl });
-            toast.success('Foto de perfil atualizada!');
+            setUser({ ...user, avatar_url: publicUrl, home_city: homeCity });
+            toast.success('Perfil atualizado com sucesso!');
             setFile(null);
             setPreviewUrl(null);
 
@@ -193,15 +198,26 @@ export function ProfileSettingsDialog({ children }: ProfileSettingsDialogProps) 
                                 <p className="text-sm font-medium text-muted-foreground/60 uppercase tracking-widest">{user?.email}</p>
                             </div>
 
-                            <div className="w-full pt-4">
+                            <div className="w-full space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="home-city" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Cidade de Origem (Base)</Label>
+                                    <Input 
+                                        id="home-city"
+                                        placeholder="Ex: Recife, São Paulo, Paripiranga..."
+                                        value={homeCity}
+                                        onChange={(e) => setHomeCity(e.target.value)}
+                                        className="bg-white/5 border-white/10 rounded-xl"
+                                    />
+                                </div>
+
                                 <MotionButton
                                     onClick={handleUpload}
-                                    disabled={!file || uploading}
+                                    disabled={uploading || isSavingProfile}
                                     className="w-full rounded-xl h-12 font-black shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90"
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                 >
-                                    {uploading ? (
+                                    {uploading || isSavingProfile ? (
                                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                     ) : (
                                         <Upload className="w-4 h-4 mr-2" />

@@ -16,13 +16,25 @@ export const CITY_COORDINATES: Record<string, Coordinate> = {
     'SAO LUIS': { lat: -2.5307, lng: -44.3068 },
     'TERESINA': { lat: -5.0920, lng: -42.8038 },
     'PARIPIRANGA': { lat: -10.6861, lng: -37.8571 },
+    'FEIRA DE SANTANA': { lat: -12.2667, lng: -38.9667 },
+    'CONQUISTA': { lat: -14.8611, lng: -40.8444 },
+    'ITABUNA': { lat: -14.7900, lng: -39.2797 },
+    'ILHEUS': { lat: -14.7889, lng: -39.0494 },
+    'PETROLINA': { lat: -9.3983, lng: -40.5008 },
+    'JUAZEIRO': { lat: -9.4121, lng: -40.5034 },
+    'CARUARU': { lat: -8.2833, lng: -35.9667 },
+    'MOSSORO': { lat: -5.1833, lng: -37.3500 },
 
     // Sudeste
     'SAO PAULO': { lat: -23.5505, lng: -46.6333 },
     'RIO DE JANEIRO': { lat: -22.9068, lng: -43.1729 },
     'BELO HORIZONTE': { lat: -19.9167, lng: -43.9345 },
-    'VITORIA': { lat: -20.3155, lng: -40.3128 },
     'CAMPINAS': { lat: -22.9056, lng: -47.0608 },
+    'SANTOS': { lat: -23.9608, lng: -46.3339 },
+    'SOROCABA': { lat: -23.5015, lng: -47.4521 },
+    'RIBEIRAO PRETO': { lat: -21.1775, lng: -47.8103 },
+    'VITORIA': { lat: -20.3155, lng: -40.3128 },
+    'VILA VELHA': { lat: -20.3297, lng: -40.2922 },
 
     // Sul
     'CURITIBA': { lat: -25.4290, lng: -49.2671 },
