@@ -25,8 +25,13 @@ const TechnicianMap = dynamic(() => import('@/components/manager/technician-map'
     loading: () => <div className="w-full h-[600px] rounded-[3rem] bg-white/5 animate-pulse flex items-center justify-center text-muted-foreground font-black uppercase tracking-widest">Carregando Mapa...</div>
 });
 
+interface TrajectoryPoint {
+    city: string;
+    status: 'past' | 'current' | 'future';
+}
+
 export default function ManagerTrackingPage() {
-    const { trips, campuses } = useTripStore();
+    const { trips, campuses, user: currentUser } = useTripStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
     const [technicians, setTechnicians] = useState<User[]>([]);
@@ -34,7 +39,6 @@ export default function ManagerTrackingPage() {
     const [editingTech, setEditingTech] = useState<User | null>(null);
     const [newHomeCity, setNewHomeCity] = useState('');
     const [isUpdatingBase, setIsUpdatingBase] = useState(false);
-    const { user: currentUser } = useTripStore();
     const isAdmin = currentUser?.role === 'admin';
 
     useEffect(() => {
@@ -125,15 +129,65 @@ export default function ManagerTrackingPage() {
         return { city: tech?.home_city || 'Recife', status: 'Disponível', tripName: '-' };
     };
 
+    const getTrajectory = (activeTrip: Trip, currentCity: string): TrajectoryPoint[] => {
+        const trajectory: TrajectoryPoint[] = [];
+        
+        // 1. Start with Origin
+        trajectory.push({ city: activeTrip.originCity, status: 'past' });
+
+        // 2. Add Itinerary Cities
+        const plannedCities = activeTrip.itinerary
+            .sort((a, b) => a.order - b.order)
+            .map(item => campuses.find(c => c.id === item.campusId)?.city)
+            .filter(Boolean) as string[];
+
+        // 3. Determine status based on currentCity
+        // If currentCity is not in plannedCities or origin, we might be "in between" or at a new place.
+        // We'll find the last "past" city.
+        
+        let foundCurrent = false;
+        
+        // Check if origin is the current city
+        if (activeTrip.originCity === currentCity) {
+            trajectory[0].status = 'current';
+            foundCurrent = true;
+        }
+
+        plannedCities.forEach((city) => {
+            let status: 'past' | 'current' | 'future' = 'future';
+            
+            if (!foundCurrent) {
+                if (city === currentCity) {
+                    status = 'current';
+                    foundCurrent = true;
+                } else {
+                    status = 'past';
+                }
+            }
+            
+            trajectory.push({ city, status });
+        });
+
+        return trajectory;
+    };
+
     const techLocations = useMemo(() => {
         return technicians.map(tech => {
             const techTrips = getTechTrips(tech.id);
             // Pass tech ID context if needed
             (techTrips as any)._techId = tech.id;
             const location = getLastLocation(techTrips);
+            
+            let trajectory: TrajectoryPoint[] | undefined = undefined;
+            const activeTrip = techTrips.find(t => t.status === 'in_progress');
+            if (activeTrip) {
+                trajectory = getTrajectory(activeTrip, location.city);
+            }
+
             return {
                 tech,
-                ...location
+                ...location,
+                trajectory
             };
         });
     }, [technicians, trips, campuses]);

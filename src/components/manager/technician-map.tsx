@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { User } from '@/lib/auth';
@@ -22,11 +22,17 @@ const fixLeafletIcons = () => {
     });
 };
 
+interface TrajectoryPoint {
+    city: string;
+    status: 'past' | 'current' | 'future';
+}
+
 interface TechLocation {
     tech: User;
     city: string;
     status: string;
     tripName: string;
+    trajectory?: TrajectoryPoint[];
 }
 
 interface TechnicianMapProps {
@@ -82,6 +88,56 @@ export default function TechnicianMap({ locations }: TechnicianMapProps) {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 />
                 
+                {locations.map((loc) => {
+                    if (!loc.trajectory || loc.trajectory.length < 2) return null;
+
+                    // Group points into segments for different styling
+                    const segments: { path: [number, number][], status: 'past' | 'current' | 'future' }[] = [];
+                    
+                    for (let i = 0; i < loc.trajectory.length - 1; i++) {
+                        const start = getCoordinates(loc.trajectory[i].city);
+                        const end = getCoordinates(loc.trajectory[i+1].city);
+                        
+                        let status: 'past' | 'current' | 'future' = 'future';
+                        const startPoint = loc.trajectory[i];
+                        const endPoint = loc.trajectory[i+1];
+
+                        if (startPoint.status === 'past' && endPoint.status === 'current') {
+                            status = 'past'; // Already arrived at current point
+                        } else if (startPoint.status === 'current') {
+                            status = 'current'; // Leaving current point for next
+                        } else if (startPoint.status === 'past' && endPoint.status === 'past') {
+                            status = 'past';
+                        } else {
+                            status = 'future';
+                        }
+
+                        if (start && end) {
+                            segments.push({
+                                path: [[start.lat, start.lng], [end.lat, end.lng]],
+                                status
+                            });
+                        }
+                    }
+
+                    return segments.map((seg, idx) => (
+                        <Polyline
+                            key={`${loc.tech.id}-seg-${idx}`}
+                            positions={seg.path}
+                            color={
+                                seg.status === 'past' ? '#10b981' : 
+                                seg.status === 'current' ? '#3b82f6' : 
+                                '#ffffff40'
+                            }
+                            weight={seg.status === 'current' ? 4 : 2}
+                            dashArray={seg.status !== 'past' ? '10, 10' : undefined}
+                            lineCap="round"
+                            lineJoin="round"
+                            className={seg.status === 'current' ? 'animate-dash' : ''}
+                        />
+                    ));
+                })}
+
                 {locations.map((loc, i) => {
                     const coords = getCoordinates(loc.city);
                     if (!coords) return null;
@@ -148,6 +204,14 @@ export default function TechnicianMap({ locations }: TechnicianMapProps) {
             </div>
 
             <style jsx global>{`
+                @keyframes dash {
+                    to {
+                        stroke-dashoffset: -20;
+                    }
+                }
+                .animate-dash {
+                    animation: dash 1s linear infinite;
+                }
                 .leaflet-container {
                     cursor: crosshair !important;
                 }
