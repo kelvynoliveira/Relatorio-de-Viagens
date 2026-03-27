@@ -15,6 +15,17 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertTriangle } from 'lucide-react';
 
 const TripMap = dynamic(() => import('@/components/dashboard/trip-map'), { 
     ssr: false,
@@ -58,6 +69,7 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
     const [isExpenseWizardOpen, setIsExpenseWizardOpen] = useState(false);
     const [isLegDrawerOpen, setIsLegDrawerOpen] = useState(false);
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [editingLeg, setEditingLeg] = useState<any>(null);
 
     if (isLoading) return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -68,20 +80,20 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
         router.push('/dashboard');
     };
 
-    const handleComplete = async () => {
-        // We can keep the confirm for safety or create a custom one, 
-        // but for now let's focus on the success feedback
-        const confirmed = window.confirm('Deseja finalizar esta viagem? Isso marcará o relatório como concluído.');
-        if (confirmed) {
-            try {
-                await updateTrip(trip.id, { status: 'completed' });
-                setIsSuccessOpen(true);
-                setActiveTab('report');
-            } catch (error) {
-                console.error('Erro ao finalizar viagem:', error);
-                toast.error('Erro ao finalizar viagem.');
-            }
+    const handleConfirmComplete = async () => {
+        setIsConfirmDialogOpen(false);
+        try {
+            await updateTrip(trip.id, { status: 'completed' });
+            setIsSuccessOpen(true);
+            setActiveTab('report');
+        } catch (error) {
+            console.error('Erro ao finalizar viagem:', error);
+            toast.error('Erro ao finalizar viagem.');
         }
+    };
+
+    const handleComplete = () => {
+        setIsConfirmDialogOpen(true);
     };
 
     // Calculate Stats
@@ -337,6 +349,54 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
                     </motion.div>
                 </AnimatePresence>
             </Tabs>
+
+            <AlertDialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+                <AlertDialogContent className="bg-black/80 backdrop-blur-2xl border-white/10 max-w-[400px] rounded-[2rem] p-8">
+                    <AlertDialogHeader>
+                        <div className="flex justify-center mb-6">
+                            <div className={cn(
+                                "w-20 h-20 rounded-full flex items-center justify-center animate-pulse shadow-2xl",
+                                stats.totalKm === 0 && stats.totalExpenses === 0 && !trip.visits.some(v => v.status === 'done')
+                                    ? "bg-amber-500/20 text-amber-500 ring-4 ring-amber-500/10 shadow-amber-500/20"
+                                    : "bg-emerald-500/20 text-emerald-500 ring-4 ring-emerald-500/10 shadow-emerald-500/20"
+                            )}>
+                                {stats.totalKm === 0 && stats.totalExpenses === 0 && !trip.visits.some(v => v.status === 'done')
+                                    ? <AlertTriangle className="w-10 h-10" />
+                                    : <CheckCircle2 className="w-10 h-10" />
+                                }
+                            </div>
+                        </div>
+                        <AlertDialogTitle className="text-3xl font-black text-center text-white tracking-tighter mb-2">
+                            {stats.totalKm === 0 && stats.totalExpenses === 0 && !trip.visits.some(v => v.status === 'done')
+                                ? "Relatório Vazio!"
+                                : "Finalizar Viagem?"
+                            }
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-center text-muted-foreground text-lg leading-relaxed">
+                            {stats.totalKm === 0 && stats.totalExpenses === 0 && !trip.visits.some(v => v.status === 'done')
+                                ? "Você ainda não registrou nada nesta viagem. Deseja realmente finalizar o relatório em branco?"
+                                : "Isso marcará o relatório como concluído e gerará o documento final. Confirmar?"
+                            }
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-10 sm:flex-col gap-3">
+                        <AlertDialogAction
+                            onClick={handleConfirmComplete}
+                            className={cn(
+                                "w-full font-bold h-14 rounded-2xl transition-all shadow-lg active:scale-95 text-base",
+                                stats.totalKm === 0 && stats.totalExpenses === 0 && !trip.visits.some(v => v.status === 'done')
+                                    ? "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20"
+                                    : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+                            )}
+                        >
+                            Sim, Finalizar Agora
+                        </AlertDialogAction>
+                        <AlertDialogCancel className="w-full h-14 rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 text-white m-0 text-base">
+                            Voltar e Revisar
+                        </AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <CampusVisitDrawer
                 open={!!selectedVisitId}
