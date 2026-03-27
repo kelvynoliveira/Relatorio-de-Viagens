@@ -8,16 +8,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Search, MapPin, CalendarDays, ExternalLink, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useState, useEffect, useMemo } from 'react';
 import { Trip } from '@/lib/models';
 import { User } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { LayoutGrid, Globe } from 'lucide-react';
+
+const TechnicianMap = dynamic(() => import('@/components/manager/technician-map'), { 
+    ssr: false,
+    loading: () => <div className="w-full h-[600px] rounded-[3rem] bg-white/5 animate-pulse flex items-center justify-center text-muted-foreground font-black uppercase tracking-widest">Carregando Mapa...</div>
+});
 
 export default function ManagerTrackingPage() {
     const { trips, campuses } = useTripStore();
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
     const [technicians, setTechnicians] = useState<User[]>([]);
     const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
 
@@ -54,7 +62,6 @@ export default function ManagerTrackingPage() {
     );
 
     const getTechTrips = (techId: string) => {
-        // Map tech trips (handling text vs uuid if necessary, but profiles.id is uuid)
         return trips.filter(t => t.userId === techId);
     };
 
@@ -67,7 +74,6 @@ export default function ManagerTrackingPage() {
         });
 
         if (activeTrip) {
-            // Priority 1: Check for an active session in any visit
             for (const visit of activeTrip.visits) {
                 const hasActiveSession = visit.sessions.some(s => !s.endAt);
                 if (hasActiveSession) {
@@ -78,9 +84,7 @@ export default function ManagerTrackingPage() {
                 }
             }
 
-            // Priority 2: Get the most recent event (Leg or Visit)
             const events: { date: Date; location: string }[] = [];
-
             activeTrip.legs.forEach(leg => {
                 const legDateStr = leg.date ? `${leg.date}T${leg.time || '00:00'}` : '';
                 const legDate = legDateStr ? new Date(legDateStr) : new Date(0);
@@ -90,7 +94,6 @@ export default function ManagerTrackingPage() {
             activeTrip.visits.forEach(visit => {
                 const campus = campuses.find(c => c.id === visit.campusId);
                 if (campus && visit.sessions.length > 0) {
-                    // Use the latest session start time
                     const latestSession = [...visit.sessions].sort((a,b) => 
                         new Date(b.startAt || 0).getTime() - new Date(a.startAt || 0).getTime()
                     )[0];
@@ -110,6 +113,22 @@ export default function ManagerTrackingPage() {
         return { city: 'Base', status: 'Disponível', tripName: '-' };
     };
 
+    const techLocations = useMemo(() => {
+        return technicians.map(tech => {
+            const techTrips = getTechTrips(tech.id);
+            const location = getLastLocation(techTrips);
+            return {
+                tech,
+                ...location
+            };
+        });
+    }, [technicians, trips, campuses]);
+
+    const filteredLocations = techLocations.filter(loc =>
+        loc.tech.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        loc.tech.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-500">
             <div>
@@ -120,104 +139,128 @@ export default function ManagerTrackingPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Buscar técnico..."
-                        className="pl-8"
+                        className="pl-8 bg-white/5 border-white/10 rounded-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+
+                <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10">
+                    <Button 
+                        variant={viewMode === 'grid' ? "default" : "ghost"}
+                        size="sm"
+                        className={cn("rounded-xl px-4", viewMode === 'grid' ? "shadow-lg shadow-primary/20" : "")}
+                        onClick={() => setViewMode('grid')}
+                    >
+                        <LayoutGrid className="w-4 h-4 mr-2" />
+                        Cards
+                    </Button>
+                    <Button 
+                        variant={viewMode === 'map' ? "default" : "ghost"}
+                        size="sm"
+                        className={cn("rounded-xl px-4", viewMode === 'map' ? "shadow-lg shadow-primary/20" : "")}
+                        onClick={() => setViewMode('map')}
+                    >
+                        <Globe className="w-4 h-4 mr-2" />
+                        Mapa
+                    </Button>
+                </div>
             </div>
 
             {/* Technicians Grid */}
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {filteredTechnicians.map((tech) => {
-                    const techTrips = getTechTrips(tech.id);
-                    const { city, status, tripName } = getLastLocation(techTrips);
-                    const isTraveling = status === 'Em Viagem';
-                    const currentTrip = techTrips.find(t => t.status === 'in_progress' && new Date() >= new Date(t.startDate));
+            {viewMode === 'grid' ? (
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredLocations.map(({ tech, city, status, tripName }) => {
+                        const isTraveling = status === 'Em Viagem';
+                        const techTrips = getTechTrips(tech.id);
+                        const currentTrip = techTrips.find(t => t.status === 'in_progress' && new Date() >= new Date(t.startDate));
 
-                    return (
-                        <Card key={tech.id} className="relative overflow-hidden group glass-card border-white/5 rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:-translate-y-1">
-                            {/* Accent Background Overlay */}
-                            <div className={cn(
-                                "absolute -right-20 -top-20 w-64 h-64 rounded-full blur-[80px] transition-all duration-700 opacity-20 group-hover:opacity-30",
-                                isTraveling ? "bg-blue-500" : "bg-emerald-500"
-                            )} />
+                        return (
+                            <Card key={tech.id} className="relative overflow-hidden group glass-card border-white/5 rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:-translate-y-1">
+                                {/* Accent Background Overlay */}
+                                <div className={cn(
+                                    "absolute -right-20 -top-20 w-64 h-64 rounded-full blur-[80px] transition-all duration-700 opacity-20 group-hover:opacity-30",
+                                    isTraveling ? "bg-blue-500" : "bg-emerald-500"
+                                )} />
 
-                            <CardHeader className="flex flex-row items-center gap-5 p-8 pb-3 relative z-10">
-                                <Avatar className="h-20 w-20 ring-4 ring-white/5 shadow-2xl transition-transform duration-500 group-hover:scale-105">
-                                    <AvatarImage src={tech.avatar_url} className="object-cover" />
-                                    <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-2xl font-black">
-                                        {tech.name.substring(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 overflow-hidden space-y-1">
-                                    <CardTitle className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors">{tech.name}</CardTitle>
-                                    <CardDescription className="font-medium text-muted-foreground/60 text-sm truncate uppercase tracking-widest">{tech.email}</CardDescription>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-8 pt-4 space-y-6 relative z-10">
-                                <div className="flex items-center justify-between">
-                                    <div className={cn(
-                                        "flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest",
-                                        isTraveling ? "bg-blue-500/20 text-blue-400 border border-blue-500/20" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
-                                    )}>
-                                        <div className={cn("w-2 h-2 rounded-full animate-pulse", isTraveling ? "bg-blue-400" : "bg-emerald-400")} />
-                                        {status}
+                                <CardHeader className="flex flex-row items-center gap-5 p-8 pb-3 relative z-10">
+                                    <Avatar className="h-20 w-20 ring-4 ring-white/5 shadow-2xl transition-transform duration-500 group-hover:scale-105">
+                                        <AvatarImage src={tech.avatar_url} className="object-cover" />
+                                        <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-2xl font-black">
+                                            {tech.name.substring(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 overflow-hidden space-y-1">
+                                        <CardTitle className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors">{tech.name}</CardTitle>
+                                        <CardDescription className="font-medium text-muted-foreground/60 text-sm truncate uppercase tracking-widest">{tech.email}</CardDescription>
                                     </div>
-                                    {isTraveling && (
-                                        <div className="flex items-center text-sm font-bold text-muted-foreground/80">
-                                            <MapPin className="mr-1.5 h-4 w-4 text-primary" />
-                                            {city}
+                                </CardHeader>
+                                <CardContent className="p-8 pt-4 space-y-6 relative z-10">
+                                    <div className="flex items-center justify-between">
+                                        <div className={cn(
+                                            "flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest",
+                                            isTraveling ? "bg-blue-500/20 text-blue-400 border border-blue-500/20" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                                        )}>
+                                            <div className={cn("w-2 h-2 rounded-full animate-pulse", isTraveling ? "bg-blue-400" : "bg-emerald-400")} />
+                                            {status}
+                                        </div>
+                                        {(isTraveling || status === 'Em Atendimento') && (
+                                            <div className="flex items-center text-sm font-bold text-muted-foreground/80">
+                                                <MapPin className="mr-1.5 h-4 w-4 text-primary" />
+                                                {city}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {status !== 'Disponível' ? (
+                                        <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4 backdrop-blur-sm">
+                                            <div className="space-y-1">
+                                                <div className="font-black text-[10px] text-muted-foreground/50 uppercase tracking-[0.2em]">Viagem Atual</div>
+                                                <div className="font-bold text-white leading-tight line-clamp-1">{tripName}</div>
+                                            </div>
+
+                                            <Separator className="bg-white/5" />
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Gastos</div>
+                                                    <div className="text-sm font-black text-white">R$ {currentTrip?.fuelEntries.reduce((a: number, b: any) => a + b.pricePaid, 0).toFixed(2) || '0,00'}</div>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Fotos</div>
+                                                    <div className="text-sm font-black text-white">{currentTrip?.visits.reduce((a: number, b: any) => a + b.photos.length, 0) || 0}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="h-[114px] flex items-center justify-center rounded-3xl border border-dashed border-white/5 opacity-40">
+                                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Aguardando Próxima Missão</p>
                                         </div>
                                     )}
-                                </div>
 
-                                {isTraveling ? (
-                                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4 backdrop-blur-sm">
-                                        <div className="space-y-1">
-                                            <div className="font-black text-[10px] text-muted-foreground/50 uppercase tracking-[0.2em]">Viagem Atual</div>
-                                            <div className="font-bold text-white leading-tight line-clamp-1">{tripName}</div>
-                                        </div>
-
-                                        <Separator className="bg-white/5" />
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1">
-                                                <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Gastos</div>
-                                                <div className="text-sm font-black text-white">R$ {currentTrip?.fuelEntries.reduce((a: number, b: any) => a + b.pricePaid, 0).toFixed(2) || '0,00'}</div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Fotos</div>
-                                                <div className="text-sm font-black text-white">{currentTrip?.visits.reduce((a: number, b: any) => a + b.photos.length, 0) || 0}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="h-[114px] flex items-center justify-center rounded-3xl border border-dashed border-white/5 opacity-40">
-                                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Aguardando Próxima Missão</p>
-                                    </div>
-                                )}
-
-                                <Link href={`/manager/tracking/${tech.id}`} className="block">
-                                    <MotionButton 
-                                        className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] shadow-2xl transition-all border-white/5 hover:bg-white/10 group-hover:border-primary/50" 
-                                        variant="outline"
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        Ver Detalhes <ArrowRight className="ml-2 h-3 w-3 stroke-[3]" />
-                                    </MotionButton>
-                                </Link>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
+                                    <Link href={`/manager/tracking/${tech.id}`} className="block">
+                                        <MotionButton 
+                                            className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] shadow-2xl transition-all border-white/5 hover:bg-white/10 group-hover:border-primary/50" 
+                                            variant="outline"
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            Ver Detalhes <ArrowRight className="ml-2 h-3 w-3 stroke-[3]" />
+                                        </MotionButton>
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </div>
+            ) : (
+                <TechnicianMap locations={filteredLocations} />
+            )}
         </div>
     );
 }
