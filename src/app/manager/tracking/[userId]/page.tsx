@@ -14,6 +14,8 @@ import { Separator } from '@/components/ui/separator';
 import { useState, useEffect } from 'react';
 import { User } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 export default function TechnicianDetailsPage() {
     const params = useParams();
@@ -38,7 +40,8 @@ export default function TechnicianDetailsPage() {
                     id: data.id,
                     name: data.name || 'Sem Nome',
                     email: data.email,
-                    role: data.role
+                    role: data.role,
+                    avatar_url: data.avatar_url
                 });
             } catch (error) {
                 console.error('Error fetching profile:', error);
@@ -50,8 +53,13 @@ export default function TechnicianDetailsPage() {
     }, [userId]);
 
     // Filter trips by the userId from the URL (which corresponds to the technician)
-    const userTrips = trips.filter(t => t.userId === userId);
-    const activeTrip = userTrips.find(t => t.status === 'in_progress');
+    const now = new Date();
+    const activeTrip = userTrips.find(t => {
+        if (t.status !== 'in_progress') return false;
+        const start = new Date(t.startDate);
+        return now >= start;
+    });
+
     // Show all OTHER trips in history, including other active ones if they exist (edge case)
     const pastTrips = userTrips.filter(t => t.id !== activeTrip?.id);
 
@@ -99,32 +107,50 @@ export default function TechnicianDetailsPage() {
             </div>
 
             {/* Technician Profile Header */}
-            <Card>
-                <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
-                    <Avatar className="h-20 w-20 text-xl border-4 border-muted">
-                        <AvatarFallback>{technician.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <Card className="glass-card border-white/5 rounded-[3rem] overflow-hidden relative group">
+                {/* Accent glow based on status */}
+                <div className={cn(
+                    "absolute -right-20 -top-20 w-80 h-80 rounded-full blur-[100px] opacity-20",
+                    activeTrip ? "bg-blue-500" : "bg-emerald-500"
+                )} />
+
+                <CardContent className="p-10 flex flex-col md:flex-row items-center gap-10 relative z-10">
+                    <Avatar className="h-32 w-32 text-3xl border-8 border-white/5 shadow-2xl ring-4 ring-white/5">
+                        <AvatarImage src={technician.avatar_url} className="object-cover" />
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white font-black">
+                            {technician.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
                     </Avatar>
 
-                    <div className="flex-1 space-y-1">
-                        <h2 className="text-2xl font-bold">{technician.name}</h2>
-                        <p className="text-muted-foreground">{technician.role === 'admin' ? 'Administrador' : 'Técnico de Campo'} • {technician.email}</p>
-                        <div className="flex gap-4 pt-2">
-                            <div className="flex items-center text-sm gap-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1 rounded-md">
-                                <Clock className="w-4 h-4" />
-                                <span>{technicianStatus}</span>
+                    <div className="flex-1 space-y-4 text-center md:text-left">
+                        <div className="space-y-1">
+                            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">{technician.name}</h2>
+                            <p className="text-muted-foreground text-lg font-medium">
+                                {technician.role === 'admin' ? 'Administrador' : 'Técnico de Campo'} • <span className="text-primary/80">{technician.email}</span>
+                            </p>
+                        </div>
+                        
+                        <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                            <div className={cn(
+                                "flex items-center gap-2 px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em]",
+                                activeTrip ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+                            )}>
+                                <div className={cn("w-2 h-2 rounded-full animate-pulse", activeTrip ? "bg-blue-400" : "bg-emerald-400")} />
+                                {technicianStatus}
                             </div>
+                            
                             {activeTrip && (
-                                <div className="flex items-center text-sm gap-1 text-muted-foreground">
-                                    <MapPin className="w-4 h-4" />
-                                    <span>Atualmente em: <strong>{currentLocation}</strong></span>
+                                <div className="flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-muted-foreground/80">
+                                    <MapPin className="w-4 h-4 text-primary" />
+                                    <span>Atualmente em: <strong className="text-white">{currentLocation}</strong></span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 min-w-[150px]">
-                        <div className="text-sm text-muted-foreground">Viagens Totais</div>
-                        <div className="text-2xl font-bold">{userTrips.length}</div>
+                    <div className="flex flex-col items-center md:items-end gap-1 px-8 py-4 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-md">
+                        <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Viagens Totais</div>
+                        <div className="text-5xl font-black text-white leading-none">{userTrips.length}</div>
                     </div>
                 </CardContent>
             </Card>
