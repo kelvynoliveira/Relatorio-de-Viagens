@@ -98,29 +98,6 @@ export default function ManagerTrackingPage() {
 
             const now = new Date();
 
-            // 1. Real Events (Manual Priority)
-            const realEvents: { date: Date, location: string, isReal: boolean }[] = [];
-            
-            activeTrip.legs.forEach(leg => {
-                const legDateStr = leg.date ? `${leg.date}T${leg.time || '00:00'}` : '';
-                const legDate = legDateStr ? new Date(legDateStr) : new Date(0);
-                realEvents.push({ date: legDate, location: leg.to, isReal: true });
-            });
- 
-            activeTrip.visits.forEach(visit => {
-                const campus = campuses.find(c => c.id === visit.campusId);
-                if (campus && visit.sessions.length > 0) {
-                    const latestSession = [...visit.sessions].sort((a,b) => 
-                        new Date(b.startAt || 0).getTime() - new Date(a.startAt || 0).getTime()
-                    )[0];
-                    if (latestSession && latestSession.startAt) {
-                        realEvents.push({ date: new Date(latestSession.startAt), location: campus.name, isReal: true });
-                    }
-                }
-            });
-
-            const now = new Date();
-
             // Helper for local date/time parsing
             const parseLocal = (datePart: string, timePart: string = '00:00') => {
                 const [y, m, d] = datePart.split('-').map(Number);
@@ -134,7 +111,7 @@ export default function ManagerTrackingPage() {
             
             activeTrip.legs.forEach(leg => {
                 if (leg.date) {
-                    const legDate = parseLocal(leg.date, leg.time);
+                    const legDate = parseLocal(leg.date, leg.time || '00:00');
                     if (!isNaN(legDate.getTime())) {
                         realEvents.push({ date: legDate, location: leg.to, isReal: true });
                     }
