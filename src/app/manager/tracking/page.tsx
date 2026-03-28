@@ -119,6 +119,40 @@ export default function ManagerTrackingPage() {
                 }
             });
 
+            const now = new Date();
+
+            // Helper for local date/time parsing
+            const parseLocal = (datePart: string, timePart: string = '00:00') => {
+                const [y, m, d] = datePart.split('-').map(Number);
+                const [hh, mm] = timePart.split(':').map(Number);
+                if (isNaN(y) || isNaN(m) || isNaN(d)) return new Date(NaN);
+                return new Date(y, m - 1, d, hh || 0, mm || 0);
+            };
+
+            // 1. Real Events (Manual Priority)
+            const realEvents: { date: Date, location: string, isReal: boolean }[] = [];
+            
+            activeTrip.legs.forEach(leg => {
+                if (leg.date) {
+                    const legDate = parseLocal(leg.date, leg.time);
+                    if (!isNaN(legDate.getTime())) {
+                        realEvents.push({ date: legDate, location: leg.to, isReal: true });
+                    }
+                }
+            });
+ 
+            activeTrip.visits.forEach(visit => {
+                const campus = campuses.find(c => c.id === visit.campusId);
+                if (campus && visit.sessions.length > 0) {
+                    const latestSession = [...visit.sessions].sort((a,b) => 
+                        new Date(b.startAt || 0).getTime() - new Date(a.startAt || 0).getTime()
+                    )[0];
+                    if (latestSession && latestSession.startAt) {
+                        realEvents.push({ date: new Date(latestSession.startAt), location: campus.city, isReal: true });
+                    }
+                }
+            });
+
             // 2. Planned Events (Automatic Fallback)
             const plannedEvents: { date: Date, location: string, isReal: boolean }[] = [];
             
@@ -126,8 +160,8 @@ export default function ManagerTrackingPage() {
             activeTrip.plannedFlights?.forEach(f => {
                 const flightDate = f.date || activeTrip.startDate;
                 const flightTime = f.flightTime || '00:00';
-                const eventDate = new Date(`${flightDate}T${flightTime}`);
-                if (eventDate <= now) {
+                const eventDate = parseLocal(flightDate, flightTime);
+                if (!isNaN(eventDate.getTime()) && eventDate <= now) {
                     plannedEvents.push({ date: eventDate, location: f.to, isReal: false });
                 }
             });
@@ -136,9 +170,9 @@ export default function ManagerTrackingPage() {
             activeTrip.itinerary.forEach(item => {
                 const campus = campuses.find(c => c.id === item.campusId);
                 if (campus && item.plannedArrival) {
-                    const eventDate = new Date(item.plannedArrival);
-                    if (eventDate <= now) {
-                        plannedEvents.push({ date: eventDate, location: campus.name, isReal: false });
+                    const eventDate = new Date(item.plannedArrival); // Itinerary dates are usually ISO from input
+                    if (!isNaN(eventDate.getTime()) && eventDate <= now) {
+                        plannedEvents.push({ date: eventDate, location: campus.city, isReal: false });
                     }
                 }
             });
