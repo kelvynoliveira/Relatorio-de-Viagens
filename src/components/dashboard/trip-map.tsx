@@ -50,21 +50,57 @@ export default function TripMap({ trips, campuses }: TripMapProps) {
       const newRoutes: MapRoute[] = [];
 
       for (const trip of trips) {
-        if (trip.status === 'draft') continue; // Don't show drafts on global map
+        if (trip.status === 'draft') continue;
 
-        const points: [number, number][] = [];
+        interface MapStop {
+            city: string;
+            date: Date;
+        }
+        
+        const stops: MapStop[] = [];
         
         // 1. Origin
-        const originCoords = await geocodeCity(trip.originCity);
-        if (originCoords) points.push([originCoords.lat, originCoords.lng]);
+        stops.push({
+            city: trip.originCity,
+            date: new Date(trip.startDate + 'T00:00:00')
+        });
 
-        // 2. Itinerary Points
+        // 2. Flights
+        trip.plannedFlights?.forEach(f => {
+            const flightDate = f.date || trip.startDate;
+            const flightTime = f.flightTime || '00:00';
+            stops.push({
+                city: f.to,
+                date: new Date(`${flightDate}T${flightTime}`)
+            });
+        });
+
+        // 3. Itinerary
         for (const item of trip.itinerary) {
           const campus = campuses.find(c => c.id === item.campusId);
           if (campus) {
-            const coords = await geocodeCity(campus.city, campus.state);
-            if (coords) points.push([coords.lat, coords.lng]);
+            const arrivalDate = item.plannedArrival ? new Date(item.plannedArrival) : new Date(trip.startDate);
+            stops.push({
+                city: campus.city,
+                date: arrivalDate
+            });
           }
+        }
+
+        // Sort and get unique path
+        const sortedStops = stops.sort((a, b) => a.date.getTime() - b.date.getTime());
+        const points: [number, number][] = [];
+
+        for (const stop of sortedStops) {
+            const coords = await geocodeCity(stop.city);
+            if (coords) {
+                // Only push if different from last point
+                if (points.length === 0 || 
+                    points[points.length-1][0] !== coords.lat || 
+                    points[points.length-1][1] !== coords.lng) {
+                    points.push([coords.lat, coords.lng]);
+                }
+            }
         }
 
         if (points.length >= 2) {

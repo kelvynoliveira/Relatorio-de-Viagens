@@ -23,10 +23,19 @@ const CITY_CACHE: Record<string, Coordinates> = {
   "MOSSORÓ": { lat: -5.1880, lng: -37.3441 },
   "IRECÊ": { lat: -11.3042, lng: -41.8558 },
   "JACOBINA": { lat: -11.1811, lng: -40.5186 },
+  "SENHOR DO BONFIM": { lat: -10.4614, lng: -40.1878 },
   "VITÓRIA DA CONQUISTA": { lat: -14.8661, lng: -40.8394 },
   "MANAUS": { lat: -3.1190, lng: -60.0217 },
   "FORTALEZA": { lat: -3.7172, lng: -38.5433 },
   "BRASÍLIA": { lat: -15.7801, lng: -47.9292 },
+  "SSA": { lat: -12.9714, lng: -38.5014 },
+  "REC": { lat: -8.0578, lng: -34.8778 },
+  "GRU": { lat: -23.4356, lng: -46.4731 },
+  "BSB": { lat: -15.8692, lng: -47.9172 },
+  "GIG": { lat: -22.8134, lng: -43.2494 },
+  "FOR": { lat: -3.7761, lng: -38.5326 },
+  "POA": { lat: -29.9939, lng: -51.1711 },
+  "CWB": { lat: -25.5317, lng: -49.1761 },
 };
 
 /**
