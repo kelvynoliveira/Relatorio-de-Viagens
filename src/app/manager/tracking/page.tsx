@@ -79,32 +79,47 @@ export default function ManagerTrackingPage() {
 
     const getLastLocation = (techTrips: Trip[]) => {
         const now = new Date();
+
+        // Helper for local date/time parsing (handles YYYY-MM-DD or DD/MM/YYYY)
+        const parseLocal = (datePart: string, timePart: string = '00:00') => {
+            if (!datePart) return new Date(NaN);
+            const isISO = datePart.includes('-');
+            const parts = isISO ? datePart.split('-') : datePart.split('/');
+            let y, m, d;
+            
+            if (isISO) {
+                // YYYY-MM-DD
+                [y, m, d] = parts.map(Number);
+            } else {
+                // DD/MM/YYYY
+                [d, m, y] = parts.map(Number);
+            }
+
+            const [hh, mm] = (timePart || '00:00').split(':').map(Number);
+            if (isNaN(y) || isNaN(m) || isNaN(d)) return new Date(NaN);
+            return new Date(y, m - 1, d, hh || 0, mm || 0);
+        };
+
         const activeTrip = techTrips.find(t => {
-            if (t.status !== 'in_progress') return false;
-            const start = t.startDate ? new Date(t.startDate) : new Date(0);
-            return now >= start;
+            // Include both started (in_progress) and purely planned (draft) trips
+            // whose start date has already arrived.
+            if (t.status !== 'in_progress' && t.status !== 'draft') return false;
+
+            const start = t.startDate ? parseLocal(t.startDate, '00:00') : new Date(0);
+            return !isNaN(start.getTime()) && now >= start;
         });
 
         if (activeTrip) {
+            // Check for active visit sessions first (Manual overriding)
             for (const visit of activeTrip.visits) {
                 const hasActiveSession = visit.sessions.some(s => !s.endAt);
                 if (hasActiveSession) {
                     const campus = campuses.find(c => c.id === visit.campusId);
                     if (campus) {
-                        return { city: campus.name, status: 'Em Atendimento', tripName: activeTrip.title };
+                        return { city: campus.city, status: 'Em Atendimento', tripName: activeTrip.title };
                     }
                 }
             }
-
-            const now = new Date();
-
-            // Helper for local date/time parsing
-            const parseLocal = (datePart: string, timePart: string = '00:00') => {
-                const [y, m, d] = datePart.split('-').map(Number);
-                const [hh, mm] = timePart.split(':').map(Number);
-                if (isNaN(y) || isNaN(m) || isNaN(d)) return new Date(NaN);
-                return new Date(y, m - 1, d, hh || 0, mm || 0);
-            };
 
             // 1. Real Events (Manual Priority)
             const realEvents: { date: Date, location: string, isReal: boolean }[] = [];
