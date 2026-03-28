@@ -96,13 +96,17 @@ export default function ManagerTrackingPage() {
                 }
             }
 
-            const events: { date: Date; location: string }[] = [];
+            const now = new Date();
+
+            // 1. Real Events (Manual Priority)
+            const realEvents: { date: Date, location: string, isReal: boolean }[] = [];
+            
             activeTrip.legs.forEach(leg => {
                 const legDateStr = leg.date ? `${leg.date}T${leg.time || '00:00'}` : '';
                 const legDate = legDateStr ? new Date(legDateStr) : new Date(0);
-                events.push({ date: legDate, location: leg.to });
+                realEvents.push({ date: legDate, location: leg.to, isReal: true });
             });
-
+ 
             activeTrip.visits.forEach(visit => {
                 const campus = campuses.find(c => c.id === visit.campusId);
                 if (campus && visit.sessions.length > 0) {
@@ -110,14 +114,44 @@ export default function ManagerTrackingPage() {
                         new Date(b.startAt || 0).getTime() - new Date(a.startAt || 0).getTime()
                     )[0];
                     if (latestSession && latestSession.startAt) {
-                        events.push({ date: new Date(latestSession.startAt), location: campus.name });
+                        realEvents.push({ date: new Date(latestSession.startAt), location: campus.name, isReal: true });
                     }
                 }
             });
 
-            if (events.length > 0) {
-                const latestEvent = events.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
-                return { city: latestEvent.location, status: 'Em Viagem', tripName: activeTrip.title };
+            // 2. Planned Events (Automatic Fallback)
+            const plannedEvents: { date: Date, location: string, isReal: boolean }[] = [];
+            
+            // Flights
+            activeTrip.plannedFlights?.forEach(f => {
+                const flightDate = f.date || activeTrip.startDate;
+                const flightTime = f.flightTime || '00:00';
+                const eventDate = new Date(`${flightDate}T${flightTime}`);
+                if (eventDate <= now) {
+                    plannedEvents.push({ date: eventDate, location: f.to, isReal: false });
+                }
+            });
+
+            // Itinerary
+            activeTrip.itinerary.forEach(item => {
+                const campus = campuses.find(c => c.id === item.campusId);
+                if (campus && item.plannedArrival) {
+                    const eventDate = new Date(item.plannedArrival);
+                    if (eventDate <= now) {
+                        plannedEvents.push({ date: eventDate, location: campus.name, isReal: false });
+                    }
+                }
+            });
+
+            // Priority Logic
+            if (realEvents.length > 0) {
+                const latestReal = realEvents.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+                return { city: latestReal.location, status: 'Em Viagem', tripName: activeTrip.title };
+            }
+
+            if (plannedEvents.length > 0) {
+                const latestPlanned = plannedEvents.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+                return { city: latestPlanned.location, status: 'Em Viagem (Planejado)', tripName: activeTrip.title };
             }
 
             return { city: activeTrip.originCity, status: 'Em Viagem', tripName: activeTrip.title };
