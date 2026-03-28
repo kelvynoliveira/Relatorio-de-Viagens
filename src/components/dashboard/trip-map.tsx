@@ -123,13 +123,109 @@ export default function TripMap({ trips, campuses }: TripMapProps) {
     }
   }, [trips, campuses]);
 
+  // Helper for local date/time parsing (robust)
+  const parseLocal = (dateVal: any, timePart: string = '00:00') => {
+    if (!dateVal) return new Date(NaN);
+    if (dateVal instanceof Date) return dateVal;
+    
+    const dateStr = String(dateVal);
+    if (dateStr.includes('T')) return new Date(dateStr);
+
+    const parts = dateStr.includes('-') ? dateStr.split('-') : dateStr.split('/');
+    let y, m, d;
+    
+    if (dateStr.includes('-')) {
+        [y, m, d] = parts.map(Number);
+    } else {
+        [d, m, y] = parts.map(Number);
+    }
+
+    const [hh, mm] = (timePart || '00:00').split(':').map(Number);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return new Date(NaN);
+    return new Date(y, m - 1, d, hh || 0, mm || 0);
+  };
+
   // All unique marker points
-  const allPoints = useMemo(() => {
+  const allPoints: [number, number][] = useMemo(() => {
     const flat: [number, number][] = [];
     routes.forEach(r => r.points.forEach(p => flat.push(p)));
     // De-duplicate effectively
-    return Array.from(new Set(flat.map(p => JSON.stringify(p)))).map(p => JSON.parse(p));
+    return Array.from(new Set(flat.map(p => JSON.stringify(p)))).map((p: string) => JSON.parse(p));
   }, [routes]);
+
+  // Determine current projected position for the primary trip
+  const techMarker = useMemo(() => {
+    if (trips.length === 0) return null;
+    const trip = trips[0];
+    const now = new Date();
+
+    // 1. Real Events (Manual)
+    const realEvents: { date: Date, city: string, status: string }[] = [];
+    
+    trip.legs.forEach(leg => {
+      if (leg.date) {
+        const d = parseLocal(leg.date, leg.time || '00:00');
+        if (!isNaN(d.getTime())) realEvents.push({ date: d, city: leg.to, status: 'Em Viagem' });
+      }
+    });
+
+    trip.visits.forEach(visit => {
+      if (visit.sessions.length > 0) {
+        const latestSession = [...visit.sessions].sort((a,b) => 
+            new Date(b.startAt || 0).getTime() - new Date(a.startAt || 0).getTime()
+        )[0];
+        if (latestSession?.startAt) {
+            const campus = campuses.find(c => c.id === visit.campusId);
+            if (campus) {
+                realEvents.push({ date: new Date(latestSession.startAt), city: campus.city, status: 'Em Atendimento' });
+            }
+        }
+      }
+    });
+
+    // 2. Planned Events (Fallback)
+    const plannedEvents: { date: Date, city: string, status: string }[] = [];
+    
+    trip.plannedFlights?.forEach(f => {
+      const d = parseLocal(f.date || trip.startDate, f.flightTime || '00:00');
+      if (!isNaN(d.getTime()) && d <= now) {
+        plannedEvents.push({ date: d, city: f.to, status: 'Em Viagem' });
+      }
+    });
+
+    trip.itinerary.forEach(item => {
+      const campus = campuses.find(c => c.id === item.campusId);
+      if (campus && item.plannedArrival) {
+        const d = parseLocal(item.plannedArrival);
+        if (!isNaN(d.getTime()) && d <= now) {
+          plannedEvents.push({ date: d, city: campus.city, status: 'Em Viagem' });
+        }
+      }
+    });
+
+    // Sort by date desc
+    const allEvents = [...realEvents, ...plannedEvents].sort((a, b) => b.date.getTime() - a.date.getTime());
+    
+    let currentCity = trip.originCity;
+    let currentStatus = 'Em Viagem';
+
+    if (allEvents.length > 0) {
+        currentCity = allEvents[0].city;
+        currentStatus = allEvents[0].status;
+    }
+
+    return { city: currentCity, status: currentStatus };
+  }, [trips, campuses]);
+
+  // Load tech marker coordinates
+  const [techCoords, setTechCoords] = useState<{lat: number, lng: number} | null>(null);
+  useEffect(() => {
+    if (techMarker) {
+        geocodeCity(techMarker.city).then(coords => {
+            if (coords) setTechCoords(coords);
+        });
+    }
+  }, [techMarker]);
 
   if (isLoading) {
     return (
@@ -184,6 +280,35 @@ export default function TripMap({ trips, campuses }: TripMapProps) {
              </Popup>
           </Marker>
         ))}
+
+        {/* Current Tech Marker */}
+        {techCoords && (
+          <Marker 
+            position={[techCoords.lat, techCoords.lng]}
+            icon={L.divIcon({
+              className: 'custom-tech-indicator',
+              html: `
+                <div class="relative flex items-center justify-center">
+                  <div class="absolute w-12 h-12 bg-${techMarker?.status === 'Em Atendimento' ? 'emerald' : 'blue'}-500/30 rounded-full animate-ping"></div>
+                  <div class="w-10 h-10 rounded-full border-4 border-${techMarker?.status === 'Em Atendimento' ? 'emerald' : 'blue'}-500 overflow-hidden bg-[#0a0a0b] shadow-2xl z-10">
+                    <div class="w-full h-full flex items-center justify-center bg-primary/10">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-${techMarker?.status === 'Em Atendimento' ? 'emerald' : 'blue'}-500"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+                    </div>
+                  </div>
+                </div>
+              `,
+              iconSize: [40, 40],
+              iconAnchor: [20, 20],
+            })}
+          >
+            <Popup>
+               <div className="text-xs font-black uppercase tracking-widest text-center">
+                    Sua Posição Projetada<br/>
+                    <span className="text-[10px] text-muted-foreground font-bold">Baseado no Roteiro</span>
+               </div>
+            </Popup>
+          </Marker>
+        )}
 
         <MapAutoBounds points={allPoints as [number, number][]} />
       </MapContainer>
