@@ -24,6 +24,9 @@ export const CITY_COORDINATES: Record<string, Coordinate> = {
     'JUAZEIRO': { lat: -9.4121, lng: -40.5034 },
     'CARUARU': { lat: -8.2833, lng: -35.9667 },
     'MOSSORO': { lat: -5.1833, lng: -37.3500 },
+    'JACOBINA': { lat: -11.1811, lng: -40.5181 },
+    'SENHOR DO BONFIM': { lat: -10.4614, lng: -40.1878 },
+    'IRECE': { lat: -11.3042, lng: -41.8558 },
 
     // Sudeste
     'SAO PAULO': { lat: -23.5505, lng: -46.6333 },
@@ -56,7 +59,9 @@ export const CITY_COORDINATES: Record<string, Coordinate> = {
     'MACAPA': { lat: 0.0347, lng: -51.0666 },
     'RIO BRANCO': { lat: -9.9747, lng: -67.8111 },
 
-    // Aeroportos / Pontos Comuns
+    // Aeroportos / Pontos Comuns / IATA
+    'SSA': { lat: -12.9714, lng: -38.5014 }, // Salvador
+    'REC': { lat: -8.0539, lng: -34.8811 },   // Recife
     'AEROPORTO': { lat: -8.1264, lng: -34.9230 }, // Default para Guararapes se for genérico
     'BASE': { lat: -8.0539, lng: -34.8811 },
 };
