@@ -130,43 +130,81 @@ export default function ManagerTrackingPage() {
     };
 
     const getTrajectory = (activeTrip: Trip, currentCity: string): TrajectoryPoint[] => {
-        const trajectory: TrajectoryPoint[] = [];
-        
-        // 1. Start with Origin
-        trajectory.push({ city: activeTrip.originCity, status: 'past' });
-
-        // 2. Add Itinerary Cities
-        const plannedCities = activeTrip.itinerary
-            .sort((a, b) => a.order - b.order)
-            .map(item => campuses.find(c => c.id === item.campusId)?.city)
-            .filter(Boolean) as string[];
-
-        // 3. Determine status based on currentCity
-        // If currentCity is not in plannedCities or origin, we might be "in between" or at a new place.
-        // We'll find the last "past" city.
-        
-        let foundCurrent = false;
-        
-        // Check if origin is the current city
-        if (activeTrip.originCity === currentCity) {
-            trajectory[0].status = 'current';
-            foundCurrent = true;
+        interface StopPoint {
+            city: string;
+            date: Date;
         }
 
-        plannedCities.forEach((city) => {
+        const stops: StopPoint[] = [];
+        
+        // 1. Start with Origin
+        stops.push({ 
+            city: activeTrip.originCity, 
+            date: new Date(activeTrip.startDate + 'T00:00:00') 
+        });
+
+        // 2. Add Planned Flights
+        activeTrip.plannedFlights.forEach(flight => {
+            const flightDate = flight.date || activeTrip.startDate;
+            const flightTime = flight.flightTime || '00:00';
+            // Arrival at destination
+            stops.push({
+                city: flight.to,
+                date: new Date(`${flightDate}T${flightTime}`)
+            });
+        });
+
+        // 3. Add Itinerary Cities
+        activeTrip.itinerary.forEach(item => {
+            const campus = campuses.find(c => c.id === item.campusId);
+            if (campus) {
+                const arrivalDate = item.plannedArrival ? new Date(item.plannedArrival) : new Date(activeTrip.startDate);
+                stops.push({
+                    city: campus.city,
+                    date: arrivalDate
+                });
+            }
+        });
+
+        // Sort by date and remove redundant consecutive cities
+        const sortedStops = stops.sort((a, b) => a.date.getTime() - b.date.getTime());
+        const uniquePath: string[] = [];
+        sortedStops.forEach(stop => {
+            if (uniquePath.length === 0 || uniquePath[uniquePath.length - 1] !== stop.city) {
+                uniquePath.push(stop.city);
+            }
+        });
+
+        // Build trajectory status
+        const trajectory: TrajectoryPoint[] = [];
+        let foundCurrent = false;
+
+        // Special case: if no uniquePath, return origin
+        if (uniquePath.length === 0) {
+            return [{ city: activeTrip.originCity, status: 'current' }];
+        }
+
+        uniquePath.forEach((city, index) => {
             let status: 'past' | 'current' | 'future' = 'future';
-            
+
             if (!foundCurrent) {
                 if (city === currentCity) {
                     status = 'current';
                     foundCurrent = true;
                 } else {
+                    // Check if we are past this city
+                    // A city is past if it's the current city or if we haven't found current yet
                     status = 'past';
                 }
+            } else {
+                status = 'future';
             }
-            
+
             trajectory.push({ city, status });
         });
+
+        // Safety check: if currentCity wasn't found in the path but technician is elsewhere,
+        // we might want to handle that. But usually tech follows the path.
 
         return trajectory;
     };
