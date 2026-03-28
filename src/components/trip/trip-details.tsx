@@ -342,7 +342,11 @@ export default function TripDetails({ tripId, readonly = false }: TripDetailsPro
                         className="min-h-[400px]"
                     >
                         <TabsContent value="itinerary" className="mt-0 space-y-6">
-                            <TripMap trips={[trip]} campuses={useTripStore().campuses} />
+                            <TripMap 
+                                trips={[trip]} 
+                                campuses={useTripStore().campuses} 
+                                avatarUrl={useTripStore().user?.avatar_url}
+                            />
                             <TabItinerary trip={trip} readonly={readonly} />
                         </TabsContent>
                         <TabsContent value="legs" className="mt-0">
