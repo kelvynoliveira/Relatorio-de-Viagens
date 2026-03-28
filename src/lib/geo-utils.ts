@@ -62,6 +62,30 @@ export const CITY_COORDINATES: Record<string, Coordinate> = {
     // Aeroportos / Pontos Comuns / IATA
     'SSA': { lat: -12.9714, lng: -38.5014 }, // Salvador
     'REC': { lat: -8.0539, lng: -34.8811 },   // Recife
+    'GRU': { lat: -23.4356, lng: -46.4731 },  // Guarulhos
+    'CGH': { lat: -23.6273, lng: -46.6562 },  // Congonhas
+    'VCP': { lat: -23.0075, lng: -47.1344 },  // Viracopos
+    'BSB': { lat: -15.8692, lng: -47.9172 },  // Brasília
+    'GIG': { lat: -22.8134, lng: -43.2494 },  // Galeão
+    'SDU': { lat: -22.9105, lng: -43.1631 },  // Santos Dumont
+    'CNF': { lat: -19.6244, lng: -43.9719 },  // Confins/BH
+    'FOR': { lat: -3.7761, lng: -38.5326 },   // Fortaleza
+    'POA': { lat: -29.9939, lng: -51.1711 },  // Porto Alegre
+    'CWB': { lat: -25.5317, lng: -49.1761 },  // Curitiba
+    'FLN': { lat: -27.6703, lng: -48.5525 },  // Florianópolis
+    'BEL': { lat: -1.3792, lng: -48.4761 },   // Belém
+    'MAO': { lat: -3.0358, lng: -60.0506 },   // Manaus
+    'MCZ': { lat: -9.5108, lng: -35.7917 },   // Maceió
+    'NAT': { lat: -5.9114, lng: -35.2478 },   // Natal
+    'JPA': { lat: -7.1483, lng: -34.9503 },   // João Pessoa
+    'AJU': { lat: -10.9850, lng: -37.0733 },  // Aracaju
+    'THE': { lat: -5.0606, lng: -42.8225 },   // Teresina
+    'SLZ': { lat: -2.5836, lng: -44.2361 },   // São Luís
+    'VIX': { lat: -20.2575, lng: -40.2864 },  // Vitória
+    'GYN': { lat: -16.6319, lng: -49.2211 },  // Goiânia
+    'CGB': { lat: -15.6528, lng: -56.1167 },  // Cuiabá
+    'CGR': { lat: -20.4697, lng: -54.6703 },  // Campo Grande
+
     'AEROPORTO': { lat: -8.1264, lng: -34.9230 }, // Default para Guararapes se for genérico
     'BASE': { lat: -8.0539, lng: -34.8811 },
 };
