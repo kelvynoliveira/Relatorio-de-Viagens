@@ -77,28 +77,33 @@ export default function ManagerTrackingPage() {
         return trips.filter(t => t.userId === techId);
     };
 
+    // Helper for local date/time parsing (handles YYYY-MM-DD, DD/MM/YYYY, ISO, etc.)
+    const parseLocal = (dateVal: any, timePart: string = '00:00') => {
+        if (!dateVal) return new Date(NaN);
+        if (dateVal instanceof Date) return dateVal;
+        
+        const dateStr = String(dateVal);
+        // Handle ISO strings (contains T)
+        if (dateStr.includes('T')) return new Date(dateStr);
+
+        const parts = dateStr.includes('-') ? dateStr.split('-') : dateStr.split('/');
+        let y, m, d;
+        
+        if (dateStr.includes('-')) {
+            // Assume YYYY-MM-DD
+            [y, m, d] = parts.map(Number);
+        } else {
+            // Assume DD/MM/YYYY
+            [d, m, y] = parts.map(Number);
+        }
+
+        const [hh, mm] = (timePart || '00:00').split(':').map(Number);
+        if (isNaN(y) || isNaN(m) || isNaN(d)) return new Date(NaN);
+        return new Date(y, m - 1, d, hh || 0, mm || 0);
+    };
+
     const getLastLocation = (techTrips: Trip[]) => {
         const now = new Date();
-
-        // Helper for local date/time parsing (handles YYYY-MM-DD or DD/MM/YYYY)
-        const parseLocal = (datePart: string, timePart: string = '00:00') => {
-            if (!datePart) return new Date(NaN);
-            const isISO = datePart.includes('-');
-            const parts = isISO ? datePart.split('-') : datePart.split('/');
-            let y, m, d;
-            
-            if (isISO) {
-                // YYYY-MM-DD
-                [y, m, d] = parts.map(Number);
-            } else {
-                // DD/MM/YYYY
-                [d, m, y] = parts.map(Number);
-            }
-
-            const [hh, mm] = (timePart || '00:00').split(':').map(Number);
-            if (isNaN(y) || isNaN(m) || isNaN(d)) return new Date(NaN);
-            return new Date(y, m - 1, d, hh || 0, mm || 0);
-        };
 
         const activeTrip = techTrips.find(t => {
             // Include both started (in_progress) and purely planned (draft) trips
@@ -177,7 +182,7 @@ export default function ManagerTrackingPage() {
 
             if (plannedEvents.length > 0) {
                 const latestPlanned = plannedEvents.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
-                return { city: latestPlanned.location, status: 'Em Viagem (Planejado)', tripName: activeTrip.title };
+                return { city: latestPlanned.location, status: 'Em Viagem', tripName: activeTrip.title };
             }
 
             return { city: activeTrip.originCity, status: 'Em Viagem', tripName: activeTrip.title };
@@ -198,31 +203,36 @@ export default function ManagerTrackingPage() {
         const stops: StopPoint[] = [];
         
         // 1. Start with Origin
+        const originDate = parseLocal(activeTrip.startDate, '00:00');
         stops.push({ 
             city: activeTrip.originCity, 
-            date: new Date(activeTrip.startDate + 'T00:00:00') 
+            date: !isNaN(originDate.getTime()) ? originDate : new Date(0)
         });
 
         // 2. Add Planned Flights
-        activeTrip.plannedFlights.forEach(flight => {
+        activeTrip.plannedFlights?.forEach(flight => {
             const flightDate = flight.date || activeTrip.startDate;
             const flightTime = flight.flightTime || '00:00';
-            // Arrival at destination
-            stops.push({
-                city: flight.to,
-                date: new Date(`${flightDate}T${flightTime}`)
-            });
+            const eventDate = parseLocal(flightDate, flightTime);
+            if (!isNaN(eventDate.getTime())) {
+                stops.push({
+                    city: flight.to,
+                    date: eventDate
+                });
+            }
         });
 
         // 3. Add Itinerary Cities
         activeTrip.itinerary.forEach(item => {
             const campus = campuses.find(c => c.id === item.campusId);
             if (campus) {
-                const arrivalDate = item.plannedArrival ? new Date(item.plannedArrival) : new Date(activeTrip.startDate);
-                stops.push({
-                    city: campus.city,
-                    date: arrivalDate
-                });
+                const arrivalDate = item.plannedArrival ? parseLocal(item.plannedArrival) : parseLocal(activeTrip.startDate);
+                if (!isNaN(arrivalDate.getTime())) {
+                    stops.push({
+                        city: campus.city,
+                        date: arrivalDate
+                    });
+                }
             }
         });
 
@@ -370,7 +380,10 @@ export default function ManagerTrackingPage() {
                     {filteredLocations.map(({ tech, city, status, tripName }) => {
                         const isTraveling = status === 'Em Viagem';
                         const techTrips = getTechTrips(tech.id);
-                        const currentTrip = techTrips.find(t => t.status === 'in_progress' && new Date() >= new Date(t.startDate));
+                        const currentTrip = techTrips.find(t => 
+                            (t.status === 'in_progress' || t.status === 'draft') && 
+                            new Date() >= parseLocal(t.startDate, '00:00')
+                        );
 
                         return (
                             <Card key={tech.id} className="relative overflow-hidden group glass-card border-white/5 rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:-translate-y-1">
