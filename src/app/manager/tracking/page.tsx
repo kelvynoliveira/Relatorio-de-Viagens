@@ -28,6 +28,7 @@ const TechnicianMap = dynamic(() => import('@/components/manager/technician-map'
 interface TrajectoryPoint {
     city: string;
     status: 'past' | 'current' | 'future';
+    transportType?: 'flight' | 'car';
 }
 
 export default function ManagerTrackingPage() {
