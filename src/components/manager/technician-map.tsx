@@ -25,6 +25,7 @@ const fixLeafletIcons = () => {
 interface TrajectoryPoint {
     city: string;
     status: 'past' | 'current' | 'future';
+    transportType?: 'flight' | 'car';
 }
 
 interface TechLocation {
@@ -92,7 +93,7 @@ export default function TechnicianMap({ locations }: TechnicianMapProps) {
                     if (!loc.trajectory || loc.trajectory.length < 2) return null;
 
                     // Group points into segments for different styling
-                    const segments: { path: [number, number][], status: 'past' | 'current' | 'future' }[] = [];
+                    const segments: { path: [number, number][], status: 'past' | 'current' | 'future', transportType: string, midLat: number, midLng: number }[] = [];
                     
                     for (let i = 0; i < loc.trajectory.length - 1; i++) {
                         const start = getCoordinates(loc.trajectory[i].city);
@@ -115,26 +116,48 @@ export default function TechnicianMap({ locations }: TechnicianMapProps) {
                         if (start && end) {
                             segments.push({
                                 path: [[start.lat, start.lng], [end.lat, end.lng]],
-                                status
+                                status,
+                                transportType: endPoint.transportType || 'car',
+                                midLat: (start.lat + end.lat) / 2,
+                                midLng: (start.lng + end.lng) / 2
                             });
                         }
                     }
 
                     return segments.map((seg, idx) => (
-                        <Polyline
-                            key={`${loc.tech.id}-seg-${idx}`}
-                            positions={seg.path}
-                            color={
-                                seg.status === 'past' ? '#10b981' : 
-                                seg.status === 'current' ? '#3b82f6' : 
-                                '#ffffff40'
-                            }
-                            weight={seg.status === 'current' ? 4 : 2}
-                            dashArray={seg.status !== 'past' ? '10, 10' : undefined}
-                            lineCap="round"
-                            lineJoin="round"
-                            className={seg.status === 'current' ? 'animate-dash' : ''}
-                        />
+                        <React.Fragment key={`${loc.tech.id}-seg-${idx}`}>
+                            <Polyline
+                                positions={seg.path}
+                                color={
+                                    seg.status === 'past' ? '#10b981' : 
+                                    seg.status === 'current' ? '#3b82f6' : 
+                                    '#ffffff40'
+                                }
+                                weight={seg.status === 'current' ? 4 : 2}
+                                dashArray={seg.status !== 'past' ? '10, 10' : undefined}
+                                lineCap="round"
+                                lineJoin="round"
+                                className={seg.status === 'current' ? 'animate-dash' : ''}
+                            />
+                            
+                            {/* Transport Icon Marker */}
+                            <Marker
+                                position={[seg.midLat, seg.midLng]}
+                                icon={L.divIcon({
+                                className: 'transport-indicator',
+                                html: `
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white/10 shadow-xl backdrop-blur-md bg-[#0a0a0b]/80 shadow-[0_0_10px_rgba(${seg.status==='past'?'16,185,129':seg.status==='current'?'59,130,246':'255,255,255'},0.3)] transition-transform hover:scale-125 z-[500]">
+                                        ${seg.transportType === 'flight' 
+                                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-${seg.status === 'past' ? 'emerald' : seg.status === 'current' ? 'blue' : 'muted-foreground'}-500"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L2.5 9l5.4 3.4L6.5 14l-2.4-.8L3 14.3l2.7 3.3 3.3 2.7.9-1.1-.8-2.4 1.6-1.4L15 21.5c.4-.2.7-.6.6-1.1Z"/></svg>`
+                                        : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-${seg.status === 'past' ? 'emerald' : seg.status === 'current' ? 'blue' : 'muted-foreground'}-500"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>`
+                                        }
+                                    </div>
+                                `,
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 16]
+                                })}
+                            />
+                        </React.Fragment>
                     ));
                 })}
 

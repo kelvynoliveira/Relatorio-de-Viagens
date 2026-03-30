@@ -198,6 +198,7 @@ export default function ManagerTrackingPage() {
         interface StopPoint {
             city: string;
             date: Date;
+            type: 'origin' | 'flight' | 'car';
         }
 
         const stops: StopPoint[] = [];
@@ -206,7 +207,8 @@ export default function ManagerTrackingPage() {
         const originDate = parseLocal(activeTrip.startDate, '00:00');
         stops.push({ 
             city: activeTrip.originCity, 
-            date: !isNaN(originDate.getTime()) ? originDate : new Date(0)
+            date: !isNaN(originDate.getTime()) ? originDate : new Date(0),
+            type: 'origin'
         });
 
         // 2. Add Planned Flights
@@ -217,7 +219,8 @@ export default function ManagerTrackingPage() {
             if (!isNaN(eventDate.getTime())) {
                 stops.push({
                     city: flight.to,
-                    date: eventDate
+                    date: eventDate,
+                    type: 'flight' // Marcamos destino do voo como flight
                 });
             }
         });
@@ -230,7 +233,8 @@ export default function ManagerTrackingPage() {
                 if (!isNaN(arrivalDate.getTime())) {
                     stops.push({
                         city: campus.city,
-                        date: arrivalDate
+                        date: arrivalDate,
+                        type: 'car' // Marcamos destino do campus como car
                     });
                 }
             }
@@ -238,10 +242,10 @@ export default function ManagerTrackingPage() {
 
         // Sort by date and remove redundant consecutive cities
         const sortedStops = stops.sort((a, b) => a.date.getTime() - b.date.getTime());
-        const uniquePath: string[] = [];
+        const uniquePath: {city: string, type: string}[] = [];
         sortedStops.forEach(stop => {
-            if (uniquePath.length === 0 || uniquePath[uniquePath.length - 1] !== stop.city) {
-                uniquePath.push(stop.city);
+            if (uniquePath.length === 0 || uniquePath[uniquePath.length - 1].city !== stop.city) {
+                uniquePath.push({ city: stop.city, type: stop.type });
             }
         });
 
@@ -251,14 +255,14 @@ export default function ManagerTrackingPage() {
 
         // Special case: if no uniquePath, return origin
         if (uniquePath.length === 0) {
-            return [{ city: activeTrip.originCity, status: 'current' }];
+            return [{ city: activeTrip.originCity, status: 'current', transportType: 'car' }];
         }
 
-        uniquePath.forEach((city, index) => {
+        uniquePath.forEach((node, index) => {
             let status: 'past' | 'current' | 'future' = 'future';
 
             if (!foundCurrent) {
-                if (city === currentCity) {
+                if (node.city === currentCity) {
                     status = 'current';
                     foundCurrent = true;
                 } else {
@@ -270,7 +274,7 @@ export default function ManagerTrackingPage() {
                 status = 'future';
             }
 
-            trajectory.push({ city, status });
+            trajectory.push({ city: node.city, status, transportType: node.type as 'flight' | 'car' });
         });
 
         // Safety check: if currentCity wasn't found in the path but technician is elsewhere,
