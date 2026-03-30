@@ -19,7 +19,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapRoute {
   id: string;
-  points: { lat: number; lng: number; date: Date }[];
+  points: { lat: number; lng: number; date: Date; type?: string }[];
   title: string;
 }
 
